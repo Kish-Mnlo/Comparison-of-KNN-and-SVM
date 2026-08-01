@@ -133,10 +133,10 @@ function OhlcvData({
                 <tr>
                   <td>{data.Date}</td>
                   <td>{Number(data.Open).toFixed(2)}</td>
-                  <td>{Number(data.Open).toFixed(2)}</td>
                   <td>{Number(data.High).toFixed(2)}</td>
                   <td>{Number(data.Low).toFixed(2)}</td>
                   <td>{Number(data.Close).toFixed(2)}</td>
+                  <td>{Number(data.Volume).toFixed(2)}</td>
                 </tr>
               ) : (
                 <tr>
