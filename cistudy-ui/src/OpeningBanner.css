@@ -1,8 +1,6 @@
 .open-banner {
   width: 100%;
-  padding: 5px;
   color: white;
-  background: linear-gradient(to right, #035f09, #77a735);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
@@ -10,7 +8,7 @@
     font-weight: bold;
     color: white;
     font-size: 20px;
-    margin: 0;          
+    padding: 10px;          
     line-height: 1.2;
 }
 
@@ -19,14 +17,14 @@
   border: 2px solid #8cc63f; 
   border-radius: 12px;
   padding: 24px;
-  max-width: 900px;
+  max-width: 1500px;
   margin: 20px auto;
   font-family: sans-serif;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .chart-title {
-  color: #00965e; /* Bullish Green Title */
+  color: #00965e; 
   text-align: center;
   font-size: 24px;
   font-weight: bold;
@@ -69,16 +67,26 @@
 
 
 .pr-card {
-  background-color: #032b04; 
-  border-radius: 12px 12px 0 0; 
-  padding: 30px;
+  position: relative;
+  background: #032b04;
   width: 100%;
-  margin: 30px auto 0 auto; 
-  min-height: 450px; 
+  min-height: 450px;
+  margin-top: 10px;
+  padding: 70px 30px 30px;
   text-align: center;
-  font-family: Arial, sans-serif;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
+}
+
+.pr-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: #ffffff; 
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  z-index: 1;
 }
 
 
@@ -87,7 +95,7 @@
   font-size: 28px;
   font-weight: 900;
   letter-spacing: 1px;
-  margin-top: 0;
+  margin-top: 20px;
   margin-bottom: 20px;
   text-transform: uppercase;
 }
@@ -180,18 +188,33 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
+  margin-top: 60px;
+  justify-content: center;
+  
+}
+
+.Model-container::before, .Model-container::after{
+  content: '';
+	border-top: 2px solid;
+	margin: 0 20px 0 0;
+	flex: 1 0 20px;
+	color: #2abb77;
+
 }
 
 .label-text {
-  color: #b2ffb2;
+  color: #237723;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
+  
 }
 
 .active-Button {
-  background-color: #8cc63f;
-  color: #032b04;
+  background: linear-gradient(to right, rgb(24, 122, 24), rgb(61, 199, 48));
+  color: #e3f1e3;
+  font-size: 20px;
   border: none;
+  width: 150px;
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: bold;
@@ -200,25 +223,27 @@
 }
 
 .inactive-Button {
-  background-color: #0c5311;
-  color: #ffffff;
-  border: 1px solid #558b2f;
+  background-color: #fafafa;
+  color: #205e23;
+  border: 2px solid ;
+  border-image: linear-gradient(to right, rgb(24, 122, 24), rgb(61, 199, 48)) 2;
   padding: 8px 16px;
+  width: 150px;
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
 
-.inactive-Button:hover {
-  opacity: 0.8;
+button:hover {
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.541);
 }
 
 .data-box {
-  background-color: #043806;
-  border: 2px solid #558b2f;
+  background-color: #8ec090;
   border-radius: 12px;
   padding: 20px;
+  margin-bottom: 50px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
@@ -232,7 +257,7 @@
 }
 
 .box-title {
-  color: #ffffff;
+  color: #174d0d;
   font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -244,7 +269,7 @@
 }
 
 .form-controls input[type="date"] {
-  background-color: #032b04;
+  background-color: #529955;
   border: 1.5px solid #558b2f;
   color: white;
   padding: 6px 12px;
