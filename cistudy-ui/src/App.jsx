@@ -161,8 +161,15 @@ function PredictionResults({nextData, prediction}){
   return (
     <div className='pr-card'>
       <h2 className='pr-title'>PREDICTION RESULTS</h2>
-      <div className='pr-symbol'><img src={prediction?.Prediction == "Higher" ? stockUp : stockDown} className="stock-symbol"/></div>
-      <div className='pr-sellbuy'>This suggests that investors should {prediction?.Prediction == "Higher" ? "buy" : "sell"}.</div>
+      {prediction ? (
+        <div> 
+          <div className='pr-symbol'><img src={prediction?.Prediction == "Higher" ? stockUp : stockDown} className="stock-symbol"/></div>
+          <div className='pr-sellbuy'>This suggests that investors should {prediction?.Prediction == "Higher" ? "buy" : "sell"}.</div>
+        </div>
+      ) : (
+        <div className='pr-warning'>Prediction results will show here.</div>
+      )}
+      
 
       <div>
         <h2 className='pr-nextTradingDay'>NEXT TRADING DAY</h2>
