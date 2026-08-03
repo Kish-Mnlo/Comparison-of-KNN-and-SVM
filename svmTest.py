@@ -15,7 +15,7 @@ import joblib
 from features3 import build_features
 
 # Load trained model
-KNNmodel = joblib.load("knn.pkl")
+SVMmodel = joblib.load("svm.pkl")
 
 # ======================================
 # Download PSEI Data
@@ -87,7 +87,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # ======================================
 # Selected Features
 # ======================================
-selector = KNNmodel.named_steps["feature_selection"]
+selector = SVMmodel.named_steps["feature_selection"]
 selected_support = selector.get_support()
 selected_features = X.columns[selected_support]
 
@@ -99,8 +99,8 @@ for feature in selected_features:
 # =====================================================
 # Predictions
 # =====================================================
-y_pred = KNNmodel.predict(X_test)
-y_prob = KNNmodel.predict_proba(X_test)[:, 1]
+y_pred = SVMmodel.predict(X_test)
+y_prob = SVMmodel.predict_proba(X_test)[:, 1]
 
 # =====================================================
 # Evaluation
@@ -174,10 +174,7 @@ tracking_error = excess_returns.std()
 
 if tracking_error != 0:
     information_ratio = excess_returns.mean() / tracking_error
-    information_ratio = (
-        excess_returns.mean()
-        / excess_returns.std()
-    ) * np.sqrt(252)
+    information_ratio = information_ratio * np.sqrt(252)
 else:
     information_ratio = np.nan
 
