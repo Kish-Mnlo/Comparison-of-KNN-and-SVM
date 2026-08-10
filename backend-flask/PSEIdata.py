@@ -8,7 +8,6 @@ CORS(app)
 
 # Load the model
 KNNmodel = joblib.load("knn.pkl")
-
 SVMmodel = joblib.load("svm.pkl")
 
 
@@ -117,6 +116,6 @@ def search():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port="5000")
 
 

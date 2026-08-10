@@ -53,7 +53,7 @@ function OhlcvData({
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/search", {
+      const response = await fetch("https://flask-backend-knnsvm.onrender.com/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
