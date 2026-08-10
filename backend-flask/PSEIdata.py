@@ -4,7 +4,8 @@ import pandas as pd
 import joblib
 
 app = Flask(__name__)
-CORS(app)
+CORS(app,
+     origins=["https://comparison-of-knn-and-svm.onrender.com"])
 
 # Load the model
 KNNmodel = joblib.load("knn.pkl")

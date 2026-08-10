@@ -46,14 +46,14 @@ function OhlcvData({
 })  {
   const [algo, setAlgo] = useState('KNN');
   const [stock_date, setDate] = useState('');
-
+  const API_URL = import.meta.env.VITE_API_URL;
 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("https://flask-backend-knnsvm.onrender.com/search", {
+      const response = await fetch(`${API_URL}/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
