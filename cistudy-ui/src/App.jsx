@@ -110,7 +110,19 @@ function OhlcvData({
               id="date"
               name="stock_date" 
               value={stock_date} 
-              onChange={(e) => setDate(e.target.value)}
+              min="2016-01-01"
+              max="2025-12-31"
+              onChange={(e) => {
+                const selectedDate = new Date(e.target.value);
+                const day = selectedDate.getDay();
+            
+                // 0 = Sunday, 6 = Saturday
+                if (day === 0 || day === 6) {
+                  return;
+                }
+            
+                setDate(e.target.value);
+              }}
             />
             <input type="submit" value="Submit" />
           </div>
