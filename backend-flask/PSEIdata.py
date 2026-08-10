@@ -11,9 +11,11 @@ CORS(app,
 KNNmodel = joblib.load("knn.pkl")
 SVMmodel = joblib.load("svm.pkl")
 
-
 # Load the CSV once when the app starts
 df = pd.read_csv("psei_features.csv")
+
+df["Date"] = pd.to_datetime(df["Date"])
+
 
 @app.route("/search", methods=["POST"])
 def search():
@@ -27,12 +29,10 @@ def search():
     date = caughtdata["stock_date"]
     algorithm = caughtdata["algorithm"]
 
-    if not date or algorithm:
+    if not date or not algorithm:
         return jsonify({
             "error": "Stock date or algorithm is required."
         }), 400
-
-    df["Date"] = pd.to_datetime(df["Date"])
 
     selected_date = pd.to_datetime(date)
 
@@ -73,9 +73,12 @@ def search():
 
     if algorithm == "KNN":
         model = KNNmodel
-
     elif algorithm == "SVM":
         model = SVMmodel
+    else:
+        return jsonify({
+            "error": "Invalid algorithm. Choose KNN or SVM."
+        }), 400
 
 
     prediction_num = model.predict(date_feature)[0]  
