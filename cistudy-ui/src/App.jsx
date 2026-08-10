@@ -77,8 +77,6 @@ function OhlcvData({
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-
-    console.log(`Submitting for ${algo} on date: ${stock_date}`);
   };
 
   return (
