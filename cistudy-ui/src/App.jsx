@@ -6,6 +6,7 @@ import stockDown from './assets/stock_down.png'
 import stockUp from './assets/stock_up.png'
 import './App.css'
 import './OpeningBanner.css'
+import Admin from './Admin'
 
 function OpeningBanner(){
   return (
@@ -47,6 +48,7 @@ function OhlcvData({
   const [algo, setAlgo] = useState('KNN');
   const [stock_date, setDate] = useState('');
   const API_URL = import.meta.env.VITE_API_URL;
+  const today = new Date().toISOString().split('T')[0];
 
 
   const handleSubmit = async (e) => {
@@ -109,7 +111,7 @@ function OhlcvData({
               name="stock_date" 
               value={stock_date} 
               min="2016-01-01"
-              max="2025-12-31"
+              max={today}
               onChange={(e) => {
                 const selectedDate = new Date(e.target.value);
                 const day = selectedDate.getDay();
@@ -242,5 +244,7 @@ function App() {
       />
     </>
   )
+
+    //return(<Admin />)
 }
 export default App

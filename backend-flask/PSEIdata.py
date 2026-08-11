@@ -2,14 +2,23 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 import joblib
+from features3 import build_features
 
 app = Flask(__name__)
-CORS(app,
-     origins=["https://comparison-of-knn-and-svm.onrender.com"])
+CORS(app, origins=[
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://comparison-of-knn-and-svm.onrender.com"
+])
 
 # Load the model
 KNNmodel = joblib.load("knn.pkl")
 SVMmodel = joblib.load("svm.pkl")
+
+raw_df = pd.read_csv("psei_data.csv")
+
+raw_df["Date"] = pd.to_datetime(raw_df["Date"])
+
 
 # Load the CSV once when the app starts
 df = pd.read_csv("psei_features.csv")
@@ -117,6 +126,164 @@ def search():
         "next_data": next_data,
         "results": results
     })
+
+@app.route("/admin/update-data", methods=["POST"])
+def update_data():
+
+    if "file" not in request.files:
+        return jsonify({
+            "error": "No CSV file was uploaded."
+        }), 400
+
+    file = request.files["file"]
+
+    if file.filename == "":
+        return jsonify({
+            "error": "No file was selected."
+        }), 400
+
+    if not file.filename.lower().endswith(".csv"):
+        return jsonify({
+            "error": "Only CSV files are allowed."
+        }), 400
+
+    try:
+
+        # ======================================
+        # Read uploaded CSV
+        # ======================================
+
+        uploaded_df = pd.read_csv(file)
+
+        # ======================================
+        # Required raw columns
+        # ======================================
+
+        required_columns = [
+            "Date",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume"
+        ]
+
+        missing_columns = [
+            column
+            for column in required_columns
+            if column not in uploaded_df.columns
+        ]
+
+        if missing_columns:
+            return jsonify({
+                "error": f"Missing required columns: {missing_columns}"
+            }), 400
+
+        # ======================================
+        # Convert dates
+        # ======================================
+
+        uploaded_df["Date"] = pd.to_datetime(
+            uploaded_df["Date"],
+            errors="coerce"
+        )
+
+        if uploaded_df["Date"].isna().any():
+            return jsonify({
+                "error": "The uploaded CSV contains invalid dates."
+            }), 400
+
+        # ======================================
+        # Combine existing + uploaded data
+        # ======================================
+
+        global raw_df
+
+        combined_df = pd.concat(
+            [raw_df, uploaded_df],
+            ignore_index=True
+        )
+
+        # ======================================
+        # Remove duplicate dates
+        #
+        # Uploaded data wins
+        # ======================================
+
+        combined_df = combined_df.drop_duplicates(
+            subset=["Date"],
+            keep="last"
+        )
+
+        # ======================================
+        # Sort chronologically
+        # ======================================
+
+        combined_df = combined_df.sort_values(
+            "Date"
+        ).reset_index(drop=True)
+
+        # ======================================
+        # Save raw dataset
+        # ======================================
+
+        combined_df.to_csv(
+            "psei_data.csv",
+            index=False
+        )
+
+        # Update the in-memory raw dataset
+        raw_df = combined_df
+
+        # ======================================
+        # Rebuild features
+        # ======================================
+
+        global df
+
+        feature_df = build_features(
+            combined_df.copy()
+        )
+
+        feature_df["Date"] = pd.to_datetime(
+            feature_df["Date"]
+        )
+
+        # ======================================
+        # Save feature dataset
+        # ======================================
+
+        feature_df.to_csv(
+            "psei_features.csv",
+            index=False
+        )
+
+        # Update the dataframe used by /search
+        df = feature_df
+
+        # ======================================
+        # Response information
+        # ======================================
+
+        latest_date = (
+            combined_df["Date"]
+            .max()
+            .strftime("%Y-%m-%d")
+        )
+
+        return jsonify({
+            "message": "PSEI data updated successfully.",
+            "latest_date": latest_date,
+            "records": len(combined_df)
+        }), 200
+
+    except Exception as error:
+
+        print("CSV update error:", error)
+
+        return jsonify({
+            "error": "Failed to update PSEI data."
+        }), 500
 
 
 if __name__ == "__main__":
