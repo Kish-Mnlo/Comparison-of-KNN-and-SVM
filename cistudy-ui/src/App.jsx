@@ -16,29 +16,6 @@ function OpeningBanner(){
   )
 }
 
-function Candlestick(){
-  return (
-    <div className='chart-card'>
-      <h2 className='chart-title'>PSEI CANDLESTICK CHART</h2>
-      <iframe
-        src="/psei_chart.html"
-        width="100%"
-        height="600"
-        title="PSEI stock price chart"
-        className="chart-frame"
-      />
-      <div className="chart-legend">
-        <span className="legend-title">LEGEND:</span>
-        <span className="legend-item bearish">
-          <span className="dot color-red"></span>Bearish
-        </span>
-        <span className="legend-item bullish">
-          <span className="dot color-green"></span>Bullish
-        </span>
-      </div>
-    </div>
-  )
-}
 function OhlcvData({
   data,
   setData,
@@ -366,11 +343,19 @@ function App() {
   const [nextData, setNextData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [predictionHistory, setPredictionHistory] = useState([]);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.toggle('dark-mode', darkMode);
+  }, [darkMode]);
 
   return (
     <>
+      <button className="dark-toggle" onClick={() => setDarkMode(!darkMode)}>
+        {darkMode ? 'Light Mode' : 'Dark Mode'}
+      </button>
       <OpeningBanner />
-      <Candlestick />
       <OhlcvData 
         data = {data}
         setData={setData}
@@ -378,12 +363,41 @@ function App() {
         setPrediction={setPrediction}
         setPredictionHistory={setPredictionHistory}
       />
-      <PredictionResults 
-        nextData = {nextData}
-        prediction={prediction}
-      />
 
-      <PredictionHistory predictionHistory={predictionHistory} />
+      <div className="tab-bar">
+        <div>
+          <button
+            className={`tab-label ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            Prediction Results
+          </button>
+          <button
+            className={`tab-label ${activeTab === 'analysis' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analysis')}
+          >
+            Models Analysis
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'dashboard' && (
+        <>
+          
+            <PredictionResults 
+              nextData={nextData}
+              prediction={prediction}
+            />
+          
+          <PredictionHistory predictionHistory={predictionHistory} />
+        </>
+      )}
+
+      {activeTab === 'analysis' && (
+        <div className="pr-card">
+          {/* Analysis content coming soon */}
+        </div>
+      )}
     </>
   )
 
