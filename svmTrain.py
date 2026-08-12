@@ -26,9 +26,7 @@ import joblib
 
 import features3
 
-# ======================================
-# Download PSEI Data
-# ======================================
+#download psei
 ticker = "PSEI.PS"
 
 df = yf.download(
@@ -42,17 +40,14 @@ df = yf.download(
 if isinstance(df.columns, pd.MultiIndex):
     df.columns = df.columns.get_level_values(0)
 
-# ======================================
-# Build Features
-# ======================================
+#build featurews
 
 df = features3.build_features(df)
 
-# ======================================
 # Target Variable
-# 1 = Price increases tomorrow beyond target
-# 0 = Price stays flat or decreases tomorrow
-# ======================================
+# 1 = Price goes up tomorrow
+# 0 = Price goes down or stays the same
+#-----------------------------------------
 future_return = (df["Close"].shift(-1) - df["Close"]) / df["Close"]
 
 # Predict target direction (0.2% change threshold)
@@ -61,9 +56,7 @@ df["Target"] = (future_return > 0.002).astype(int)
 # Drop any remaining NaN targets (usually just the last row)
 df = df.dropna()
 
-# ======================================
-# Feature Matrix
-# ======================================
+#feature matrix
 feature_columns = [
     "SMA",
     "WMA",
@@ -80,9 +73,7 @@ feature_columns = [
 X = df[feature_columns]
 y = df["Target"]
 
-# ======================================
-# Chronological Train/Test Split
-# ======================================
+#train test split
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -90,9 +81,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     shuffle=False
 )
 
-# ======================================
-# Pipeline Setup
-# ======================================
+#PIPELINE
 pipeline = Pipeline([
     (
         "scaler",
@@ -114,9 +103,7 @@ pipeline = Pipeline([
     )
 ])
 
-# ======================================
-# Hyperparameter Tuning Grid
-# ======================================
+#tuning
 param_grid = {
     # Allows bypassing of feature selection completely ("all")
     "feature_selection__k": [5, "all"],
@@ -139,7 +126,7 @@ grid = GridSearchCV(
     verbose=1
 )
 
-# ======================================
+
 # Train Model
 # ======================================
 print("Starting grid search hyperparameter tuning...")

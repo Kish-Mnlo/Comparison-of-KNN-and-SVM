@@ -44,8 +44,8 @@ function OhlcvData({
   setData,
   setNextData,
   setPrediction,
+   setPredictionHistory,
 })  {
-  const [algo, setAlgo] = useState('KNN');
   const [stock_date, setDate] = useState('');
   const API_URL = import.meta.env.VITE_API_URL;
   const today = new Date().toISOString().split('T')[0];
@@ -61,8 +61,7 @@ function OhlcvData({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          stock_date,
-          algorithm: algo,
+          stock_date
         }),
       });
 
@@ -76,6 +75,24 @@ function OhlcvData({
       setData(result.data);
       setNextData(result.next_data);
       setPrediction(result.results);
+
+      setPredictionHistory((previousHistory) => [
+        ...previousHistory,
+        {
+          date: result.data.Date,
+          knnPrediction: result.results.KNN.Prediction,
+          knnConfidence:
+            result.results.KNN.Prediction === "Higher"
+              ? result.results.KNN.Probability_Higher
+              : result.results.KNN.Probability_Lower,
+          svmPrediction: result.results.SVM.Prediction,
+          svmConfidence:
+            result.results.SVM.Prediction === "Higher"
+              ? result.results.SVM.Probability_Higher
+              : result.results.SVM.Probability_Lower,
+          actual: result.actual
+        }
+      ]);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -83,23 +100,6 @@ function OhlcvData({
 
   return (
     <div className="ohlcv-container">
-      <div className="Model-container">
-        <span className="label-text">Select prediction algorithm:</span>
-        <button 
-          className={algo === 'KNN' ? 'active-Button' : 'inactive-Button'} 
-          onClick={() => setAlgo('KNN')}
-          type = "button"
-        >
-          KNN
-        </button>
-        <button 
-          className={algo === 'SVM' ? 'active-Button' : 'inactive-Button'} 
-          onClick={() => setAlgo('SVM')}
-          type = "button"
-        >
-          SVM
-        </button>
-      </div>
 
       <div className="data-box">
         <form onSubmit={handleSubmit} className="box-header">
@@ -169,64 +169,203 @@ function OhlcvData({
   );
 }
 
-function PredictionResults({nextData, prediction}){
+function PredictionResults({ nextData, prediction }) {
+return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</h2>
+  {prediction ? (
+    <div className="prediction-comparison">
+
+      {/* KNN */}
+      <div className="prediction-model">
+        <h3>KNN</h3>
+
+        <div className="pr-symbol">
+          <img
+            src={
+              prediction.KNN?.Prediction === "Higher"
+                ? stockUp
+                : stockDown
+            }
+            className="stock-symbol"
+          />
+        </div>
+
+        <h3>
+          {prediction.KNN?.Prediction}
+        </h3>
+
+        <div className="pr-sellbuy">
+          This suggests that investors should{" "}
+          {prediction.KNN?.Prediction === "Higher"
+            ? "buy"
+            : "sell"}.
+        </div>
+
+        <p>
+          Probability Higher:{" "}
+          {prediction.KNN?.Probability_Higher}
+        </p>
+
+        <p>
+          Probability Lower:{" "}
+          {prediction.KNN?.Probability_Lower}
+        </p>
+      </div>
+
+
+      {/* SVM */}
+      <div className="prediction-model">
+        <h3>SVM</h3>
+
+        <div className="pr-symbol">
+          <img
+            src={
+              prediction.SVM?.Prediction === "Higher"
+                ? stockUp
+                : stockDown
+            }
+            className="stock-symbol"
+          />
+        </div>
+
+        <h3>
+          {prediction.SVM?.Prediction}
+        </h3>
+
+        <div className="pr-sellbuy">
+          This suggests that investors should{" "}
+          {prediction.SVM?.Prediction === "Higher"
+            ? "buy"
+            : "sell"}.
+        </div>
+
+        <p>
+          Probability Higher:{" "}
+          {prediction.SVM?.Probability_Higher}
+        </p>
+
+        <p>
+          Probability Lower:{" "}
+          {prediction.SVM?.Probability_Lower}
+        </p>
+      </div>
+
+    </div>
+  ) : (
+    <div className="pr-warning">
+      Prediction results will show here.
+    </div>
+  )}
+
+
+  {/* NEXT TRADING DAY */}
+  <div>
+    <h2 className="pr-nextTradingDay">NEXT TRADING DAY</h2>
+
+    <div className="pr-table-container">
+      <table className="pr-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Open</th>
+            <th>High</th>
+            <th>Low</th>
+            <th>Close</th>
+            <th>Volume</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {nextData ? (
+            <tr>
+              <td>{nextData.Date}</td>
+              <td>{Number(nextData.Open).toFixed(2)}</td>
+              <td>{Number(nextData.High).toFixed(2)}</td>
+              <td>{Number(nextData.Low).toFixed(2)}</td>
+              <td>{Number(nextData.Close).toFixed(2)}</td>
+              <td>{Number(nextData.Volume).toFixed(2)}</td>
+            </tr>
+          ) : (
+            <tr>
+              <td>--/--/----</td>
+              <td>0.00</td>
+              <td>0.00</td>
+              <td>0.00</td>
+              <td>0.00</td>
+              <td>0</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+);
+}
+
+function PredictionHistory({ predictionHistory }) {
   return (
-    <div className='pr-card'>
-      <h2 className='pr-title'>PREDICTION RESULTS</h2>
-      {prediction ? (
-        <div> 
-          <div className='pr-symbol'><img src={prediction?.Prediction == "Higher" ? stockUp : stockDown} className="stock-symbol"/></div>
-          <div className='pr-sellbuy'>This suggests that investors should {prediction?.Prediction == "Higher" ? "buy" : "sell"}.</div>
+    <div className="history-card">
+      <h2 className="history-title">PREDICTION HISTORY</h2>
+
+      {predictionHistory.length === 0 ? (
+        <div className="pr-warning">
+          Prediction history will show here.
         </div>
       ) : (
-        <div className='pr-warning'>Prediction results will show here.</div>
-      )}
-      
-
-      <div>
-        <h2 className='pr-nextTradingDay'>NEXT TRADING DAY</h2>
-        <div className='pr-table-container'>
-          <table className='pr-table'>
+        <div className="table-responsive">
+          <table className="history-table">
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Open</th>
-                <th>High</th>
-                <th>Low</th>
-                <th>Close</th>
-                <th>Volume</th>
+                <th>KNN Prediction</th>
+                <th>KNN Confidence</th>
+                <th>SVM Prediction</th>
+                <th>SVM Confidence</th>
+                <th>Actual</th>
               </tr>
             </thead>
+
             <tbody>
-              {nextData ? (
-              <tr>
-                <td>{nextData.Date}</td>
-                <td>{Number(nextData.Open).toFixed(2)}</td>
-                <td>{Number(nextData.High).toFixed(2)}</td>
-                <td>{Number(nextData.Low).toFixed(2)}</td>
-                <td>{Number(nextData.Close).toFixed(2)}</td>
-                <td>{Number(nextData.Volume).toFixed(2)}</td>
-              </tr>) : (
-                <tr>
-                  <td>--/--/----</td>
-                  <td>0.00</td>
-                  <td>0.00</td>
-                  <td>0.00</td>
-                  <td>0.00</td>
-                  <td>0</td>
+              {predictionHistory.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.date}</td>
+
+                  <td>
+                    {item.knnPrediction}
+                  </td>
+
+                  <td>
+                    {item.knnConfidence}
+                  </td>
+
+                  <td>
+                    {item.svmPrediction}
+                  </td>
+
+                  <td>
+                    {item.svmConfidence}
+                  </td>
+
+                  <td>
+                    {item.actual || "Pending"}
+                  </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
     </div>
-  )
+  );
 }
+
 function App() {
   const [data, setData] = useState(null);
   const [nextData, setNextData] = useState(null);
   const [prediction, setPrediction] = useState(null);
+  const [predictionHistory, setPredictionHistory] = useState([]);
 
   return (
     <>
@@ -237,11 +376,14 @@ function App() {
         setData={setData}
         setNextData={setNextData}
         setPrediction={setPrediction}
+        setPredictionHistory={setPredictionHistory}
       />
       <PredictionResults 
         nextData = {nextData}
         prediction={prediction}
       />
+
+      <PredictionHistory predictionHistory={predictionHistory} />
     </>
   )
 

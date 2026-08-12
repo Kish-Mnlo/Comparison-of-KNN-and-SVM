@@ -114,13 +114,13 @@ function Admin() {
 
         {message && (
           <div className="success-message">
-            ✓ {message}
+             {message}
           </div>
         )}
 
         {error && (
           <div className="error-message">
-            ✕ {error}
+             {error}
           </div>
         )}
 

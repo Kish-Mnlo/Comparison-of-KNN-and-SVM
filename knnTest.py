@@ -17,10 +17,7 @@ from features3 import build_features
 # Load trained model
 KNNmodel = joblib.load("knn.pkl")
 
-# ======================================
-# Download PSEI Data
-# ======================================
-
+#download psei data
 ticker = "PSEI.PS"
 
 df = yf.download(
@@ -35,17 +32,14 @@ if isinstance(df.columns, pd.MultiIndex):
     df.columns = df.columns.get_level_values(0)
 
 
-# =====================================================
-# Build Features
-# =====================================================
-
+#buiild features
 df = build_features(df)
 
-# =====================================================
+
 # Target Variable
 # 1 = Price goes up tomorrow
 # 0 = Price goes down or stays the same
-# =====================================================
+#-----------------------------------------
 df["Future_Returns"] = (df["Close"].shift(-1) - df["Close"]) / df["Close"]
 
 df["Target"] = (df["Future_Returns"] > 0.002).astype(int)
@@ -53,10 +47,7 @@ df["Daily_Returns"] = df["Close"].pct_change()
 
 df = df.dropna()
 
-# =====================================================
-# Feature Matrix
-# =====================================================
-
+#feature matrix
 feature_columns = [
     "SMA",
     "WMA",
@@ -73,10 +64,7 @@ feature_columns = [
 X = df[feature_columns]
 y = df["Target"]
 
-# =====================================================
-# Train-Test Split (Time Series)
-# =====================================================
-
+#train and test split
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -84,9 +72,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     shuffle=False
 )
 
-# ======================================
-# Selected Features
-# ======================================
+#selected features
 selector = KNNmodel.named_steps["feature_selection"]
 selected_support = selector.get_support()
 selected_features = X.columns[selected_support]
@@ -96,13 +82,12 @@ print("-----------------")
 for feature in selected_features:
     print(f"- {feature}")
 
-# =====================================================
+
 # Predictions
-# =====================================================
 y_pred = KNNmodel.predict(X_test)
 y_prob = KNNmodel.predict_proba(X_test)[:, 1]
 
-# =====================================================
+
 # Evaluation
 # =====================================================
 print("\nFinal Model Results")
@@ -119,7 +104,7 @@ print()
 print("Classification Report")
 print(classification_report(y_test, y_pred))
 
-# =====================================================
+
 # Prediction Results
 # =====================================================
 results = pd.DataFrame(
@@ -134,7 +119,7 @@ results = pd.DataFrame(
 print("\nLast 20 Predictions")
 print(results.tail(20))
 
-# =====================================================
+
 # Information Ratio
 # =====================================================
 

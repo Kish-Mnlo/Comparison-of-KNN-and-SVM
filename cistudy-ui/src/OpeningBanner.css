@@ -315,3 +315,14 @@ button:hover {
   background-color: #032b04;
   color: #ffffff;
 }
+
+.prediction-comparison {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.prediction-model {
+  flex: 1;
+  text-align: center;
+}

@@ -36,9 +36,8 @@ def search():
         }), 400
 
     date = caughtdata["stock_date"]
-    algorithm = caughtdata["algorithm"]
 
-    if not date or not algorithm:
+    if not date:
         return jsonify({
             "error": "Stock date or algorithm is required."
         }), 400
@@ -63,6 +62,15 @@ def search():
     if current_index + 1 < len(df):
         next_row = df.iloc[current_index + 1]
 
+    #actual result
+    actual = None
+
+    if next_row is not None:
+        if next_row["Close"] > current_row["Close"]:
+            actual = "Higher"
+    else:
+        actual = "Lower"
+
     features = [
         "SMA",
         "WMA",
@@ -80,23 +88,24 @@ def search():
     date_feature = X.iloc[[current_index]]
     
 
-    if algorithm == "KNN":
-        model = KNNmodel
-    elif algorithm == "SVM":
-        model = SVMmodel
-    else:
-        return jsonify({
-            "error": "Invalid algorithm. Choose KNN or SVM."
-        }), 400
+    #knn prediction
+
+    knn_prediction_num = KNNmodel.predict(date_feature)[0]
+    knn_probability = KNNmodel.predict_proba(date_feature)[0]
+
+    knn_prediction = (
+        "Higher" if knn_prediction_num == 1 else "Lower"
+    )
 
 
-    prediction_num = model.predict(date_feature)[0]  
-    probability = model.predict_proba(date_feature)[0]    
+    #svm prediction
 
-    if prediction_num == 1:
-        prediction = "Higher"
-    else:
-        prediction = "Lower"
+    svm_prediction_num = SVMmodel.predict(date_feature)[0]
+    svm_probability = SVMmodel.predict_proba(date_feature)[0]
+
+    svm_prediction = (
+        "Higher" if svm_prediction_num == 1 else "Lower"
+    )
 
     data = {
         "Date": current_row["Date"].strftime("%Y-%m-%d"),
@@ -115,15 +124,22 @@ def search():
         "Volume": int(next_row["Volume"]),
     }
     results = {
-        "Prediction": prediction,
-        "Probability_Higher": f"{probability[1]:.2%}",
-        "Probability_Lower": f"{probability[0]:.2%}",
-        "Algorithm": algorithm
+    "KNN": {
+        "Prediction": knn_prediction,
+        "Probability_Higher": f"{knn_probability[1]:.2%}",
+        "Probability_Lower": f"{knn_probability[0]:.2%}"
+    },
+    "SVM": {
+        "Prediction": svm_prediction,
+        "Probability_Higher": f"{svm_probability[1]:.2%}",
+        "Probability_Lower": f"{svm_probability[0]:.2%}"
     }
+}
 
     return jsonify({
         "data": data,
         "next_data": next_data,
+        "actual": actual,
         "results": results
     })
 
@@ -149,16 +165,9 @@ def update_data():
 
     try:
 
-        # ======================================
-        # Read uploaded CSV
-        # ======================================
-
+        #read uploaded csv
         uploaded_df = pd.read_csv(file)
-
-        # ======================================
-        # Required raw columns
-        # ======================================
-
+        #required columns
         required_columns = [
             "Date",
             "Open",
@@ -179,10 +188,7 @@ def update_data():
                 "error": f"Missing required columns: {missing_columns}"
             }), 400
 
-        # ======================================
-        # Convert dates
-        # ======================================
-
+        #date convert
         uploaded_df["Date"] = pd.to_datetime(
             uploaded_df["Date"],
             errors="coerce"
@@ -193,10 +199,7 @@ def update_data():
                 "error": "The uploaded CSV contains invalid dates."
             }), 400
 
-        # ======================================
-        # Combine existing + uploaded data
-        # ======================================
-
+        #combine existing and current
         global raw_df
 
         combined_df = pd.concat(
@@ -204,29 +207,20 @@ def update_data():
             ignore_index=True
         )
 
-        # ======================================
-        # Remove duplicate dates
-        #
-        # Uploaded data wins
-        # ======================================
-
+        #remove duplicates
         combined_df = combined_df.drop_duplicates(
             subset=["Date"],
             keep="last"
         )
 
-        # ======================================
-        # Sort chronologically
-        # ======================================
-
+        
+        #chronological sort
         combined_df = combined_df.sort_values(
             "Date"
         ).reset_index(drop=True)
 
-        # ======================================
-        # Save raw dataset
-        # ======================================
-
+        
+        #save raw dataset
         combined_df.to_csv(
             "psei_data.csv",
             index=False
@@ -235,10 +229,8 @@ def update_data():
         # Update the in-memory raw dataset
         raw_df = combined_df
 
-        # ======================================
-        # Rebuild features
-        # ======================================
-
+       
+        #rebuild featurs
         global df
 
         feature_df = build_features(
@@ -249,10 +241,7 @@ def update_data():
             feature_df["Date"]
         )
 
-        # ======================================
-        # Save feature dataset
-        # ======================================
-
+        #features dataset
         feature_df.to_csv(
             "psei_features.csv",
             index=False
@@ -261,10 +250,8 @@ def update_data():
         # Update the dataframe used by /search
         df = feature_df
 
-        # ======================================
-        # Response information
-        # ======================================
-
+        
+        #feedback info
         latest_date = (
             combined_df["Date"]
             .max()

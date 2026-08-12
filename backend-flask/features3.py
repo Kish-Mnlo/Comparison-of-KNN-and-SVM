@@ -3,16 +3,16 @@ import pandas as pd
 from scipy.stats import skew, kurtosis
 from scipy.fft import fft
 
-# ==========================================================
-# Moving Averages
-# ==========================================================
+#MOVING AVERAGES
 
+#SIMPLE MOVING AVE
 # MODIFIED: Changed from absolute price output to a percentage ratio.
 # DELETED old logic: return series.rolling(window).mean()
 def SMA_ratio(series, window):
     sma = series.rolling(window).mean()
     return (series - sma) / sma  # FIXED: Measures relative distance to prevent price-scale mismatch
 
+#WEIGHTED MEAN AVE
 # MODIFIED: Changed from absolute price output to a percentage ratio.
 def WMA_ratio(series, window):
     weights = np.arange(1, window + 1)
@@ -23,10 +23,7 @@ def WMA_ratio(series, window):
     return (series - wma) / wma  # FIXED: Stationarized metric
 
 
-# ==========================================================
-# Stochastic Oscillator
-# ==========================================================
-
+#STOCHASTIC OSCILLATOR
 def Stochastic_K(high, low, close, window=14):
     lowest = low.rolling(window).min()
     highest = high.rolling(window).max()
@@ -38,10 +35,7 @@ def Stochastic_D(k, window=3):
     return k.rolling(window).mean()
 
 
-# ==========================================================
-# Accumulation Distribution Oscillator
-# ==========================================================
-
+#ACCUMULATION DISTRIBUTION OSCILLATOR
 # MODIFIED: Scaled cumulative volume value using rolling average volume.
 # DELETED old logic: return (clv * volume).cumsum()
 def AD_ratio(high, low, close, volume, window=20):
@@ -56,18 +50,12 @@ def AD_ratio(high, low, close, volume, window=20):
     return ad_flow.cumsum() / rolling_vol.replace(0, np.nan)
 
 
-# ==========================================================
-# Percentage Differences
-# ==========================================================
-
+#PERCENTAGE DIFFERENCES
 def pct_diff_low(close, low, window=14):
     lowest = low.rolling(window).min()
     return (close - lowest) / lowest.replace(0, np.nan)
 
-# ==========================================================
-# Fourier Features
-# ==========================================================
-
+#FOURIER FEATURES
 def FFT_features(series, window=20):
     mins = []
     maxs = []
@@ -82,7 +70,7 @@ def FFT_features(series, window=20):
             continue
 
         # FIXED Look-Ahead Bug: values[i-window:i] evaluates up to i-1.
-        # This is safe, but because it maps to row index `i`, we protect it with a shift below.
+        #maps to row index `i`, protect with a shift below.
         fft_vals = np.abs(fft(values[i-window:i]))
         mins.append(np.min(fft_vals))
         maxs.append(np.max(fft_vals))
@@ -90,9 +78,7 @@ def FFT_features(series, window=20):
 
     return mins, maxs
 
-# ==========================================================
-# Statistical Features
-# ==========================================================
+#STATISTICAL FEATURES
 
 # MODIFIED: Calculated metrics on percentage changes instead of absolute close prices.
 # DELETED old logic: return series.rolling(window).apply(skew/kurtosis/std, raw=True)
@@ -105,10 +91,7 @@ def rolling_kurtosis(series, window):
 def rolling_sd(series, window):
     return series.pct_change().rolling(window).std()  # FIXED: Stationarized
 
-# ==========================================================
-# Build Feature Matrix
-# ==========================================================
-
+#BUILD FEATURE MATRIX
 def build_features(df):
     df = df.copy()
 
