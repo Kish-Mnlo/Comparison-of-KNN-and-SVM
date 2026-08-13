@@ -68,8 +68,8 @@ def search():
     if next_row is not None:
         if next_row["Close"] > current_row["Close"]:
             actual = "Higher"
-    else:
-        actual = "Lower"
+        else:
+            actual = "Lower"
 
     features = [
         "SMA",
