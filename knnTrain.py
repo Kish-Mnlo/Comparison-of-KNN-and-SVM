@@ -14,10 +14,7 @@ from features3 import build_features
 import joblib
 
 
-# ======================================
-# Download PSEI Data
-# ======================================
-
+#download psei data
 ticker = "PSEI.PS"
 
 df = yf.download(
@@ -32,17 +29,14 @@ if isinstance(df.columns, pd.MultiIndex):
     df.columns = df.columns.get_level_values(0)
 
 
-# =====================================================
-# Build Features
-# =====================================================
-
+#build features
 df = build_features(df)
 
-# =====================================================
-# Target Variable and Daily Returns
+
+# Target Variable
 # 1 = Price goes up tomorrow
 # 0 = Price goes down or stays the same
-# =====================================================
+#-----------------------------------------
 df["Future_Returns"] = (df["Close"].shift(-1) - df["Close"]) / df["Close"]
 
 df["Target"] = (df["Future_Returns"] > 0.002).astype(int)
@@ -51,10 +45,7 @@ df["Daily_Returns"] = df["Close"].pct_change()
 df = df.dropna()
 
 
-# =====================================================
-# Feature Matrix
-# =====================================================
-
+#feature matrix
 feature_columns = [
     "SMA",
     "WMA",
@@ -71,10 +62,7 @@ feature_columns = [
 X = df[feature_columns]
 y = df["Target"]
 
-# =====================================================
-# Train-Test Split (Time Series)
-# =====================================================
-
+#train and test split
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -82,10 +70,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     shuffle=False
 )
 
-# =====================================================
-# Pipeline
-# =====================================================
-
+#PIPELINE
 pipeline = Pipeline([
     (
         "scaler",
@@ -105,10 +90,8 @@ pipeline = Pipeline([
     )
 ])
 
-# =====================================================
-# Hyperparameter tuning grid
-# =====================================================
 
+#tuning
 param_grid = {
     # Allows bypassing of feature selection completely ("all")
     "feature_selection__k": [5, "all"],
@@ -124,9 +107,8 @@ grid = GridSearchCV(
     scoring="balanced_accuracy"
 )
 
-# =====================================================
+
 # Find the Best k
-# =====================================================
 print("Starting grid search hyperparameter tuning...")
 grid.fit(X_train, y_train)
 
