@@ -6,7 +6,7 @@
 
 .open-line{
     font-weight: bold;
-    font-size: 20px;
+    font-size: 26px;
     padding: 10px;          
     line-height: 1.2;
 }
@@ -285,3 +285,4 @@ button:hover {
   flex: 1;
   text-align: center;
 }
+

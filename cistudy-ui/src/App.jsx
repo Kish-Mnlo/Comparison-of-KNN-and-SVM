@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import stockDown from './assets/stock_down.png'
 import stockUp from './assets/stock_up.png'
+import sun from './assets/sun.png'
+import moon from'./assets/moon.png'
 import './App.css'
 import './OpeningBanner.css'
 import Admin from './Admin'
@@ -27,6 +31,30 @@ function OhlcvData({
   const API_URL = import.meta.env.VITE_API_URL;
   const today = new Date().toISOString().split('T')[0];
 
+  const [validDates, setValidDates] = useState(new Set());
+  const [datesLoading, setDatesLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchValidDates = async () => {
+      try {
+        const response = await fetch(`${API_URL}/valid-dates`);
+        if (!response.ok) throw new Error('Failed to load valid dates');
+        const result = await response.json();
+        setValidDates(new Set(result));
+      } catch (error) {
+        console.error("Error fetching valid dates:", error);
+      } finally {
+        setDatesLoading(false);
+      }
+    };
+
+    fetchValidDates();
+  }, [API_URL]);
+
+  const isValidTradingDate = (date) => {
+    const iso = date.toISOString().split('T')[0];
+    return validDates.has(iso);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,33 +105,40 @@ function OhlcvData({
 
   return (
     <div className="ohlcv-container">
+    <div className="data-box">
+    <form onSubmit={handleSubmit} className="box-header">
+      <div className="box-title">OHLCV DATA</div>
+      <div className="form-controls">
+        <DatePicker
+          id="date"
+          name="stock_date"
+          selected={stock_date ? new Date(stock_date + 'T00:00:00') : null}
+          onChange={(date) => {
+            if (!date || isNaN(date)) return;
 
-      <div className="data-box">
-        <form onSubmit={handleSubmit} className="box-header">
-          <div className="box-title">OHLCV DATA</div>
-          <div className="form-controls">
-            <input 
-              type="date" 
-              id="date"
-              name="stock_date" 
-              value={stock_date} 
-              min="2016-01-01"
-              max={today}
-              onChange={(e) => {
-                const selectedDate = new Date(e.target.value);
-                const day = selectedDate.getDay();
-            
-                // 0 = Sunday, 6 = Saturday
-                if (day === 0 || day === 6) {
-                  return;
-                }
-            
-                setDate(e.target.value);
-              }}
-            />
-            <input type="submit" value="Submit" />
-          </div>
-        </form>
+            const day = date.getDay();
+
+            // 0 = Sunday, 6 = Saturday
+            if (day === 0 || day === 6) {
+              return;
+            }
+
+            setDate(date.toISOString().split('T')[0]);
+          }}
+          filterDate={(date) => date.getDay() !== 0 && date.getDay() !== 6}
+          minDate={new Date('2016-01-01')}
+          maxDate={new Date(today)}
+          dateFormat="MM/dd/yy"
+          placeholderText="MM/DD/YY"
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          yearDropdownItemNumber={new Date().getFullYear() - 2016 + 1}
+          scrollableYearDropdown
+        />
+        <input type="submit" value="Submit" />
+      </div>
+    </form>
 
         <div className="table-responsive">
           <table className="ohlcv-table">
@@ -352,9 +387,12 @@ function App() {
 
   return (
     <>
-      <button className="dark-toggle" onClick={() => setDarkMode(!darkMode)}>
-        {darkMode ? 'Light Mode' : 'Dark Mode'}
-      </button>
+      <div className="dark-toggle-wrapper">
+        <button className="dark-toggle" onClick={() => setDarkMode(!darkMode)}>
+          <img src={darkMode ? sun : moon} alt="" />
+        </button>
+      </div>
+
       <OpeningBanner />
       <OhlcvData 
         data = {data}
