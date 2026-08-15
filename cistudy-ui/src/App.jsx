@@ -31,29 +31,11 @@ function OhlcvData({
   const API_URL = import.meta.env.VITE_API_URL;
   const today = new Date().toISOString().split('T')[0];
 
-  const [validDates, setValidDates] = useState(new Set());
-  const [datesLoading, setDatesLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchValidDates = async () => {
-      try {
-        const response = await fetch(`${API_URL}/valid-dates`);
-        if (!response.ok) throw new Error('Failed to load valid dates');
-        const result = await response.json();
-        setValidDates(new Set(result));
-      } catch (error) {
-        console.error("Error fetching valid dates:", error);
-      } finally {
-        setDatesLoading(false);
-      }
-    };
-
-    fetchValidDates();
-  }, [API_URL]);
-
-  const isValidTradingDate = (date) => {
-    const iso = date.toISOString().split('T')[0];
-    return validDates.has(iso);
+  const toLocalISODate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handleSubmit = async (e) => {
@@ -123,7 +105,7 @@ function OhlcvData({
               return;
             }
 
-            setDate(date.toISOString().split('T')[0]);
+            setDate(toLocalISODate(date));
           }}
           filterDate={(date) => date.getDay() !== 0 && date.getDay() !== 6}
           minDate={new Date('2016-01-01')}
