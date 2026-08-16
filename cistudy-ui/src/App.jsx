@@ -16,6 +16,7 @@ function OpeningBanner(){
   return (
     <div className="open-banner">
       <h2 className='open-line'>PREDICTING THE PHILIPPINE STOCK EXCHANGE INDEX</h2>
+      <h2 className='first-line'>NEXT-DAY DIRECTION</h2>
     </div>
   )
 }
@@ -170,7 +171,7 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 
       {/* KNN */}
       <div className="prediction-model">
-        <h3>KNN</h3>
+        <h3>K-Nearest Neighbors</h3>
 
         <div className="pr-symbol">
           <img
@@ -208,7 +209,7 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 
       {/* SVM */}
       <div className="prediction-model">
-        <h3>SVM</h3>
+        <h3>Support Vector Machines</h3>
 
         <div className="pr-symbol">
           <img
@@ -253,7 +254,7 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 
   {/* NEXT TRADING DAY */}
   <div>
-    <h2 className="pr-nextTradingDay">NEXT TRADING DAY</h2>
+    <h2 className="pr-nextTradingDay">ACTUAL NEXT TRADING DAY</h2>
 
     <div className="pr-table-container">
       <table className="pr-table">
@@ -360,7 +361,7 @@ function App() {
   const [nextData, setNextData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [predictionHistory, setPredictionHistory] = useState([]);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('results');
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -387,21 +388,21 @@ function App() {
       <div className="tab-bar">
         <div>
           <button
-            className={`tab-label ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            className={`tab-label ${activeTab === 'results' ? 'active' : ''}`}
+            onClick={() => setActiveTab('results')}
           >
-            Prediction Results
+            Results
           </button>
           <button
-            className={`tab-label ${activeTab === 'analysis' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analysis')}
+            className={`tab-label ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
           >
-            Models Analysis
+            History
           </button>
         </div>
       </div>
 
-      {activeTab === 'dashboard' && (
+      {activeTab === 'results' && (
         <>
           
             <PredictionResults 
@@ -409,13 +410,13 @@ function App() {
               prediction={prediction}
             />
           
-          <PredictionHistory predictionHistory={predictionHistory} />
+          
         </>
       )}
 
-      {activeTab === 'analysis' && (
+      {activeTab === 'history' && (
         <div className="pr-card">
-          {/* Analysis content coming soon */}
+          <PredictionHistory predictionHistory={predictionHistory} />
         </div>
       )}
     </>
