@@ -211,17 +211,7 @@ body{
   padding: 34px 28px;
   background: #479a4b;
   border-radius: 20px;
-  
-}
-
-.pr-title{
-  display: block;
-  text-align: left;
-  color: rgba(255,255,255,0.6);
-  font-size: 11px;
-  letter-spacing: 2px;
-  font-weight: 700;
-  margin-bottom: 22px;
+  text-align: center;
 }
 
 .prediction-comparison{
@@ -311,7 +301,7 @@ body{
 }
 
 .pr-warning{
-  color: #eef7ea;
+  color: #8abd74;
   text-align: center;
   padding: 30px 0;
   font-weight: 600;
@@ -325,8 +315,8 @@ body{
 }
 
 .history-title{
-  color: #133813;
-  font-size: 16px;
+  color: #d0f3d0;
+  font-size: 26px;
   font-weight: 800;
   margin-bottom: 14px;
   text-align: center;
@@ -374,9 +364,12 @@ body.dark-mode .open-line{
   background-clip: text;
   color: transparent;
 }
- 
+body.dark-mode .first-line{
+  color: #fcfffc;
+  -webkit-text-fill-color: #cdeccd;
+}
 body.dark-mode .open-line::after{
-  color: #cdeccd;
+  color: #e9f8e9;
   -webkit-text-fill-color: #cdeccd;
 }
  
@@ -450,7 +443,6 @@ body.dark-mode .history-table td{
   background: #122a13;
   color: #eafcea;
 }
-@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 *{
   margin: 0;
@@ -484,20 +476,19 @@ body{
   width:100%;
   font-family: "Poppins", sans-serif;
   font-weight: 400;
-   background: linear-gradient(to right, #003012, #9fffac); /* your two colors */
+  background: linear-gradient(to right, #003012, #9fffac); /* your two colors */
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   margin: 0;
 }
 
+
+
 .open-line:focus {
   outline: none;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600&display=swap");
-
-/* ---------------- top banner ---------------- */
 .open-banner{
   background: #ffffff;
   border-bottom: 1px solid #e2e2e2;
@@ -765,7 +756,7 @@ body{
 }
 
 .pr-warning{
-  color: #eef7ea;
+  color: #8ab478;
   text-align: center;
   padding: 30px 0;
   font-weight: 600;
@@ -779,8 +770,8 @@ body{
 }
 
 .history-title{
-  color: #133813;
-  font-size: 16px;
+  color: #f8fff8;
+  font-size: 26px;
   font-weight: 800;
   margin-bottom: 14px;
 }
