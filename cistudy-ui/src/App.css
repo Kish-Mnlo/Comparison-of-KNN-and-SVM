@@ -894,6 +894,14 @@ body.dark-mode .history-table td{
   color: #eafcea;
 }
 
+body.dark-mode{
+  background-image: url("./assets/bg-dark.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+}
+
 /*button*/
 .dark-toggle-wrapper {
   position: fixed;
