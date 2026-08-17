@@ -1,0 +1,24 @@
+.chart-card {
+  margin-bottom: 24px;
+}
+
+.chart-accuracy-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.chart-accuracy-pill {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background-color: #f1f1f1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.dark-mode .chart-accuracy-pill {
+  background-color: #2a241c;
+  color: #f0ece2;
+}
