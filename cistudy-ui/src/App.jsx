@@ -11,6 +11,8 @@ import moon from'./assets/moon.png'
 import './App.css'
 import './OpeningBanner.css'
 import Admin from './Admin'
+import PredictionChart from './PredictionChart.jsx'
+import './PredictionChart.css'
 
 function OpeningBanner(){
   return (
@@ -416,6 +418,7 @@ function App() {
 
       {activeTab === 'history' && (
         <div className="pr-card">
+          <PredictionChart predictionHistory={predictionHistory} />
           <PredictionHistory predictionHistory={predictionHistory} />
         </div>
       )}
