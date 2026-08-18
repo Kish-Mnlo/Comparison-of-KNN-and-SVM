@@ -46,8 +46,9 @@ def AD_ratio(high, low, close, volume, window=20):
     
     # FIXED: Cumulative values grow infinitely across time splits. 
     # Normalizing by rolling volume binds features to a consistent scale.
-    rolling_vol = volume.rolling(window).mean()
-    return ad_flow.cumsum() / rolling_vol.replace(0, np.nan)
+    rolling_vol = volume.rolling(window).sum()
+    rolling_ad = ad_flow.rolling(window).sum()
+    return rolling_ad / rolling_vol.replace(0, np.nan)
 
 
 #PERCENTAGE DIFFERENCES
@@ -57,26 +58,21 @@ def pct_diff_low(close, low, window=14):
 
 #FOURIER FEATURES
 def FFT_features(series, window=20):
-    mins = []
-    maxs = []
+    mins = np.full(len(series), np.nan)
+    maxs = np.full(len(series), np.nan)
 
-    values = series.values
+    values = series.to_numpy()
 
-    for i in range(len(series)):
-        if i < window:
-            mins.append(np.nan)
-            maxs.append(np.nan)
+    for i in range(window, len(series)):
+        window_values = values[i-window:i]
 
-            continue
+        fft_vals = np.abs(fft(window_values))
 
-        # FIXED Look-Ahead Bug: values[i-window:i] evaluates up to i-1.
-        #maps to row index `i`, protect with a shift below.
-        fft_vals = np.abs(fft(values[i-window:i]))
-        mins.append(np.min(fft_vals))
-        maxs.append(np.max(fft_vals))
-
+        mins[i] = np.min(fft_vals)
+        maxs[i] = np.max(fft_vals)
 
     return mins, maxs
+
 
 #STATISTICAL FEATURES
 
@@ -110,11 +106,10 @@ def build_features(df):
 
     df["PctDiffLow"] = pct_diff_low(close, low)
 
-    # FIXED Look-Ahead Bug: Applied .shift(1) to all Fourier metrics.
-    # DELETED old logic: directly assigning lists to dataframe without an added offset shift.
+
     fft_min, fft_max = FFT_features(close)
-    df["FFT_Min"] = pd.Series(fft_min, index=df.index).shift(1)
-    df["FFT_Max"] = pd.Series(fft_max, index=df.index).shift(1)
+    df["FFT_Min"] = fft_min
+    df["FFT_Max"] = fft_max
 
     df["Skewness"] = rolling_skew(close, 20)
     df["Kurtosis"] = rolling_kurtosis(close, 20)

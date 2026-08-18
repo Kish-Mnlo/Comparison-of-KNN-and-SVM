@@ -31,6 +31,8 @@ function OhlcvData({
    setPredictionHistory,
 })  {
   const [stock_date, setDate] = useState('');
+  const [error, setError] = useState('');
+  const [error_message, setErrorMessage] = useState('');
   const API_URL = import.meta.env.VITE_API_URL;
   const today = new Date().toISOString().split('T')[0];
 
@@ -43,6 +45,7 @@ function OhlcvData({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
 
     try {
       const response = await fetch(`${API_URL}/search`, {
@@ -56,8 +59,9 @@ function OhlcvData({
       });
 
       if (!response.ok) {
-        const err = await response.json()
-        alert(err.error)
+        const err = await response.json();
+        setError(err.error || "Something went wrong.") ;
+        setErrorMessage(err.message || "Please try again.");
         return
       }
 
@@ -84,13 +88,32 @@ function OhlcvData({
         }
       ]);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      setError("Unable to connect to the server.")
+      setErrorMessage("Please try again.");
     }
   };
 
   return (
     <div className="ohlcv-container">
     <div className="data-box">
+    {error_message && (
+          <div className="error-alert">
+            <span className="error-icon">⚠️</span>
+
+            <div>
+              <strong>{error}</strong>
+              <p>{error_message}</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setErrorMessage('')}
+              className="close-alert"
+            >
+              x
+            </button>
+          </div>
+        )}
     <form onSubmit={handleSubmit} className="box-header">
       <div className="box-title">OHLCV DATA</div>
       <div className="form-controls">

@@ -39,7 +39,8 @@ def search():
 
     if not date:
         return jsonify({
-            "error": "Stock date or algorithm is required."
+            "error": "Stock date is required.",
+            "message": "Please select a date from the calendar."
         }), 400
 
     selected_date = pd.to_datetime(date)
@@ -49,7 +50,8 @@ def search():
 
     if len(matches) == 0:
         return jsonify({
-            "error": "No data found."
+            "error": "No data found.",
+            "message": "There is no available data for this date."
         }), 404
 
     current_index = matches[0]
@@ -148,19 +150,22 @@ def update_data():
 
     if "file" not in request.files:
         return jsonify({
-            "error": "No CSV file was uploaded."
+            "error": "No CSV file was uploaded.",
+            "message": "Please try again."
         }), 400
 
     file = request.files["file"]
 
     if file.filename == "":
         return jsonify({
-            "error": "No file was selected."
+            "error": "No file was selected.",
+            "message": "Please try again."
         }), 400
 
     if not file.filename.lower().endswith(".csv"):
         return jsonify({
-            "error": "Only CSV files are allowed."
+            "error": "Only CSV files are allowed.",
+            "message": "Please select a CSV file and try again."
         }), 400
 
     try:
@@ -185,7 +190,8 @@ def update_data():
 
         if missing_columns:
             return jsonify({
-                "error": f"Missing required columns: {missing_columns}"
+                "error": f"Missing required columns: {missing_columns}",
+                "message": "Please check the file and try again."
             }), 400
 
         #date convert
@@ -196,7 +202,8 @@ def update_data():
 
         if uploaded_df["Date"].isna().any():
             return jsonify({
-                "error": "The uploaded CSV contains invalid dates."
+                "error": "The uploaded CSV contains invalid dates.",
+                "message": "Please check the file and try again."
             }), 400
 
         #combine existing and current
@@ -269,7 +276,8 @@ def update_data():
         print("CSV update error:", error)
 
         return jsonify({
-            "error": "Failed to update PSEI data."
+            "error": "Failed to update PSEI data.",
+            "message": "Please try again."
         }), 500
 
 
