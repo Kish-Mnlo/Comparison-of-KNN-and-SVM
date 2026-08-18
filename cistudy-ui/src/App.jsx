@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react'
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import stockDown from './assets/stock_down.png'
 import stockUp from './assets/stock_up.png'
+import sun from './assets/sun.png'
+import moon from'./assets/moon.png'
 import './App.css'
 import './OpeningBanner.css'
 import Admin from './Admin'
+import PredictionChart from './PredictionChart.jsx'
+import './PredictionChart.css'
 
 function OpeningBanner(){
   return (
     <div className="open-banner">
       <h2 className='open-line'>PREDICTING THE PHILIPPINE STOCK EXCHANGE INDEX</h2>
+      <h2 className='first-line'>NEXT-DAY DIRECTION</h2>
     </div>
   )
 }
@@ -27,6 +34,12 @@ function OhlcvData({
   const API_URL = import.meta.env.VITE_API_URL;
   const today = new Date().toISOString().split('T')[0];
 
+  const toLocalISODate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,33 +90,40 @@ function OhlcvData({
 
   return (
     <div className="ohlcv-container">
+    <div className="data-box">
+    <form onSubmit={handleSubmit} className="box-header">
+      <div className="box-title">OHLCV DATA</div>
+      <div className="form-controls">
+        <DatePicker
+          id="date"
+          name="stock_date"
+          selected={stock_date ? new Date(stock_date + 'T00:00:00') : null}
+          onChange={(date) => {
+            if (!date || isNaN(date)) return;
 
-      <div className="data-box">
-        <form onSubmit={handleSubmit} className="box-header">
-          <div className="box-title">OHLCV DATA</div>
-          <div className="form-controls">
-            <input 
-              type="date" 
-              id="date"
-              name="stock_date" 
-              value={stock_date} 
-              min="2016-01-01"
-              max={today}
-              onChange={(e) => {
-                const selectedDate = new Date(e.target.value);
-                const day = selectedDate.getDay();
-            
-                // 0 = Sunday, 6 = Saturday
-                if (day === 0 || day === 6) {
-                  return;
-                }
-            
-                setDate(e.target.value);
-              }}
-            />
-            <input type="submit" value="Submit" />
-          </div>
-        </form>
+            const day = date.getDay();
+
+            // 0 = Sunday, 6 = Saturday
+            if (day === 0 || day === 6) {
+              return;
+            }
+
+            setDate(toLocalISODate(date));
+          }}
+          filterDate={(date) => date.getDay() !== 0 && date.getDay() !== 6}
+          minDate={new Date('2016-01-01')}
+          maxDate={new Date(today)}
+          dateFormat="MM/dd/yy"
+          placeholderText="MM/DD/YY"
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          yearDropdownItemNumber={new Date().getFullYear() - 2016 + 1}
+          scrollableYearDropdown
+        />
+        <input type="submit" value="Submit" />
+      </div>
+    </form>
 
         <div className="table-responsive">
           <table className="ohlcv-table">
@@ -153,7 +173,7 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 
       {/* KNN */}
       <div className="prediction-model">
-        <h3>KNN</h3>
+        <h3>K-Nearest Neighbors</h3>
 
         <div className="pr-symbol">
           <img
@@ -191,7 +211,7 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 
       {/* SVM */}
       <div className="prediction-model">
-        <h3>SVM</h3>
+        <h3>Support Vector Machines</h3>
 
         <div className="pr-symbol">
           <img
@@ -236,7 +256,7 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 
   {/* NEXT TRADING DAY */}
   <div>
-    <h2 className="pr-nextTradingDay">NEXT TRADING DAY</h2>
+    <h2 className="pr-nextTradingDay">ACTUAL NEXT TRADING DAY</h2>
 
     <div className="pr-table-container">
       <table className="pr-table">
@@ -343,7 +363,7 @@ function App() {
   const [nextData, setNextData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [predictionHistory, setPredictionHistory] = useState([]);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('results');
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -352,9 +372,12 @@ function App() {
 
   return (
     <>
-      <button className="dark-toggle" onClick={() => setDarkMode(!darkMode)}>
-        {darkMode ? 'Light Mode' : 'Dark Mode'}
-      </button>
+      <div className="dark-toggle-wrapper">
+        <button className="dark-toggle" onClick={() => setDarkMode(!darkMode)}>
+          <img src={darkMode ? sun : moon} alt="" />
+        </button>
+      </div>
+
       <OpeningBanner />
       <OhlcvData 
         data = {data}
@@ -367,21 +390,21 @@ function App() {
       <div className="tab-bar">
         <div>
           <button
-            className={`tab-label ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            className={`tab-label ${activeTab === 'results' ? 'active' : ''}`}
+            onClick={() => setActiveTab('results')}
           >
-            Prediction Results
+            Results
           </button>
           <button
-            className={`tab-label ${activeTab === 'analysis' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analysis')}
+            className={`tab-label ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
           >
-            Models Analysis
+            History
           </button>
         </div>
       </div>
 
-      {activeTab === 'dashboard' && (
+      {activeTab === 'results' && (
         <>
           
             <PredictionResults 
@@ -389,13 +412,14 @@ function App() {
               prediction={prediction}
             />
           
-          <PredictionHistory predictionHistory={predictionHistory} />
+          
         </>
       )}
 
-      {activeTab === 'analysis' && (
+      {activeTab === 'history' && (
         <div className="pr-card">
-          {/* Analysis content coming soon */}
+          <PredictionChart predictionHistory={predictionHistory} />
+          <PredictionHistory predictionHistory={predictionHistory} />
         </div>
       )}
     </>

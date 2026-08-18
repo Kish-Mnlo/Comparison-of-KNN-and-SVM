@@ -230,7 +230,7 @@ def update_data():
         raw_df = combined_df
 
        
-        #rebuild featurs
+        #rebuild features
         global df
 
         feature_df = build_features(

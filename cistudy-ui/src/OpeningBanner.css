@@ -6,9 +6,16 @@
 
 .open-line{
     font-weight: bold;
-    font-size: 20px;
+    font-size: 18px;
     padding: 10px;          
     line-height: 1.2;
+}
+
+.first-line{
+    font-weight: bold;
+    font-size: 26px;
+    padding: 10px;          
+    text-align: center;
 }
 
 .chart-card {
@@ -72,6 +79,7 @@
   min-height: 450px;
   text-align: center;
   box-sizing: border-box;
+ 
 }
 
 .pr-title {
@@ -79,9 +87,10 @@
   font-size: 28px;
   font-weight: 900;
   letter-spacing: 1px;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 5px;
+  margin-bottom: 15px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 
@@ -285,3 +294,4 @@ button:hover {
   flex: 1;
   text-align: center;
 }
+
