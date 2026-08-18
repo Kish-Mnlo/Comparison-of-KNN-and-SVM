@@ -134,7 +134,7 @@ function OhlcvData({
             setDate(toLocalISODate(date));
           }}
           filterDate={(date) => date.getDay() !== 0 && date.getDay() !== 6}
-          minDate={new Date('2016-01-01')}
+          minDate={new Date('2016-02-01')}
           maxDate={new Date(today)}
           dateFormat="MM/dd/yy"
           placeholderText="MM/DD/YY"
