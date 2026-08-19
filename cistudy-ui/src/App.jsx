@@ -13,7 +13,7 @@ import './OpeningBanner.css'
 import Admin from './Admin'
 import PredictionChart from './PredictionChart.jsx'
 import './PredictionChart.css'
-import OpeningScreen from './OpeningScreen'
+import OpeningScreen from './Openingscreen.jsx'
 
 function OpeningBanner(){
   return (
