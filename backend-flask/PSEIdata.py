@@ -13,7 +13,7 @@ CORS(app, origins=[
 
 # Load the model
 KNNmodel = joblib.load("knn.pkl")
-SVMmodel = joblib.load("svm.pkl")
+SVMmodel = joblib.load("finalsvm.pkl")
 
 raw_df = pd.read_csv("psei_data.csv")
 
@@ -32,7 +32,8 @@ def search():
 
     if not caughtdata:
         return jsonify({
-            "error": "No data found."
+            "error": "No data found.",
+            "message": "Please select a date from the calendar."
         }), 400
 
     date = caughtdata["stock_date"]
