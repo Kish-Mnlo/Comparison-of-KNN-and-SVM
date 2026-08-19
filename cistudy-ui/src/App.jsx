@@ -13,6 +13,7 @@ import './OpeningBanner.css'
 import Admin from './Admin'
 import PredictionChart from './PredictionChart.jsx'
 import './PredictionChart.css'
+import OpeningScreen from './OpeningScreen'
 
 function OpeningBanner(){
   return (
@@ -109,8 +110,7 @@ function OhlcvData({
               type="button"
               onClick={() => setErrorMessage('')}
               className="close-alert"
-            >
-              x
+            >x
             </button>
           </div>
         )}
@@ -388,10 +388,22 @@ function App() {
   const [predictionHistory, setPredictionHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('results');
   const [darkMode, setDarkMode] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     document.body.classList.toggle('dark-mode', darkMode);
   }, [darkMode]);
+
+  if (showSplash) {
+    return (
+      <OpeningScreen
+        appName="PSEi Predictor"
+        tagline="predicting next-day direction"
+        duration={2800}
+        onFinish={() => setShowSplash(false)}
+      />
+    );
+  }
 
   return (
     <>

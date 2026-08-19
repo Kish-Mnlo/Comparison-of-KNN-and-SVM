@@ -1,0 +1,132 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+.os-root {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 560px;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 15%, #10230f 0%, #060b06 55%, #030503 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Poppins", sans-serif;
+  transition: opacity 0.6s ease, filter 0.6s ease;
+}
+
+.os-exit {
+  opacity: 0;
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.os-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(159, 255, 172, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(159, 255, 172, 0.05) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(70% 60% at 50% 40%, #000 40%, transparent 100%);
+}
+
+.os-ticker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 4%;
+  gap: 6px;
+  opacity: 0.35;
+}
+
+.os-ticker span {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  animation: osRise 2.4s ease-in-out infinite alternate;
+  transform-origin: bottom;
+  display: block;
+}
+
+.os-ticker span.up {
+  background: linear-gradient(180deg, #9fffac 0%, #234d24 100%);
+}
+
+.os-ticker span.down {
+  background: linear-gradient(180deg, #ff6b6b 0%, #4a1616 100%);
+}
+
+@keyframes osRise {
+  from { transform: scaleY(0.55); opacity: 0.5; }
+  to   { transform: scaleY(1); opacity: 0.9; }
+}
+
+.os-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: osIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes osIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.os-mark {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 18px;
+}
+
+.os-word {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin: 0;
+  background: linear-gradient(90deg, #9fffac 0%, #eafcea 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.os-tag {
+  margin: 8px 0 30px;
+  font-size: 12.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #6fa86f;
+  font-weight: 500;
+}
+
+.os-chart {
+  width: 220px;
+  height: 44px;
+  overflow: visible;
+}
+
+.os-chart path {
+  fill: none;
+  stroke: #9fffac;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px rgba(159, 255, 172, 0.55));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-ticker span { animation: none; }
+  .os-center { animation: none; }
+}
+
+@media (max-width: 480px) {
+  .os-word { font-size: 26px; }
+  .os-chart { width: 160px; }
+}

@@ -20,19 +20,12 @@ body{
   display: flex;
   align-items: flex-start;
   gap: 12px;
-
   background: #fff1f2;
   color: #991b1b;
-
   border: 1px solid #fca5a5;
-  border-left: 5px solid #dc2626;
-
+  border-left: 5px solid #b90808;
   padding: 14px 16px;
   margin: 15px 0;
-
-  border-radius: 10px;
-
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
 }
 
 .error-icon {
@@ -52,17 +45,17 @@ body{
 
 .close-alert {
   margin-left: auto;
-
-  background: transparent;
   border: none;
-
   color: #991b1b;
-  font-size: 22px;
+  font-size: 16px;
+  font-weight: 800;
   cursor: pointer;
 }
 
 .close-alert:hover {
-  color: #450a0a;
+  outline: none;
+  box-shadow: none;
+  background: none;
 }
 
 .chart-card {
@@ -78,21 +71,6 @@ body{
   display: block;
 }
 
-.open-line{
-  text-align: center;
-  width:100%;
-  font-family: "Poppins", sans-serif;
-  font-weight: 400;
-   background: linear-gradient(to right, #003012, #9fffac); /* your two colors */
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  margin: 0;
-}
-
-.open-line:focus {
-  outline: none;
-}
 
 /* ---------------- top banner ---------------- */
 .open-banner{
@@ -527,7 +505,8 @@ body{
   width:100%;
   font-family: "Poppins", sans-serif;
   font-weight: 400;
-  background: linear-gradient(to right, #003012, #9fffac); /* your two colors */
+  color: #003012;
+  background: linear-gradient(to right, #003012, #71f783); /* your two colors */
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
