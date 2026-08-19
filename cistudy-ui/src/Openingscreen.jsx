@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./OpeningScreen.css";
+import "./Openingscreen.css";
 
 // Staggered heights + direction for the ambient ticker field behind the logo.
 // "down" bars render red, "up" bars render green — like a live price ticker.
