@@ -3,6 +3,8 @@ from flask_cors import CORS
 import pandas as pd
 import joblib
 from features3 import build_features
+from datetime import datetime
+import yfinance as yf
 
 app = Flask(__name__)
 CORS(app, origins=[
@@ -20,14 +22,35 @@ raw_df = pd.read_csv("psei_data.csv")
 raw_df["Date"] = pd.to_datetime(raw_df["Date"])
 
 
-# Load the CSV once when the app starts
-df = pd.read_csv("psei_features.csv")
+def re_update_data():
+    global df, last_updated, date
+    # Download the df till present time once when the app starts
+    ticker = "PSEI.PS"
+    df = yf.download(
+        ticker,
+        start="2016-01-01",
+        auto_adjust=True,
+        progress=False
+    )
 
-df["Date"] = pd.to_datetime(df["Date"])
+    df.index = pd.to_datetime(df.index)
+
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+
+    df = build_features(df)
+
+    last_updated = datetime.now().date()
+    
+
+re_update_data()
 
 
 @app.route("/search", methods=["POST"])
 def search():
+    if last_updated != datetime.now().date():
+        update_data()
+    
     caughtdata = request.get_json()
 
     if not caughtdata:
@@ -47,15 +70,13 @@ def search():
     selected_date = pd.to_datetime(date)
 
     # Find the matching row
-    matches = df.index[df["Date"] == selected_date]
-
-    if len(matches) == 0:
+    if selected_date not in df.index:
         return jsonify({
             "error": "No data found.",
-            "message": "There is no available data for this date."
+            "message": "There is no OLHCV data for this date, please select a different one."
         }), 404
 
-    current_index = matches[0]
+    current_index = df.index.get_loc(selected_date)
 
     current_row = df.iloc[current_index]
 
@@ -111,7 +132,7 @@ def search():
     )
 
     data = {
-        "Date": current_row["Date"].strftime("%Y-%m-%d"),
+        "Date": current_row.name.strftime("%Y-%m-%d"),
         "Open": float(current_row["Open"]),
         "High": float(current_row["High"]),
         "Low": float(current_row["Low"]),
@@ -119,7 +140,7 @@ def search():
         "Volume": int(current_row["Volume"]),
     }
     next_data = None if next_row is None else {
-        "Date": next_row["Date"].strftime("%Y-%m-%d"),
+        "Date": next_row.name.strftime("%Y-%m-%d"),
         "Open": float(next_row["Open"]),
         "High": float(next_row["High"]),
         "Low": float(next_row["Low"]),
@@ -284,5 +305,3 @@ def update_data():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port="5000")
-
-
