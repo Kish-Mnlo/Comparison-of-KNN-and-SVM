@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import reactLogo from './assets/react.svg'
@@ -15,6 +15,7 @@ import PredictionChart from './PredictionChart.jsx'
 import './PredictionChart.css'
 import OpeningScreen from './Openingscreen.jsx'
 import './Loading.css'
+import './History.css'
 
 function OpeningBanner(){
   return (
@@ -117,6 +118,7 @@ function OhlcvData({
       setPredictionHistory((previousHistory) => [
         ...previousHistory,
         {
+          id: `${result.data.Date}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           date: result.data.Date,
           knnPrediction: result.results.KNN.Prediction,
           knnConfidence:
@@ -377,7 +379,45 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 );
 }
 
+const HISTORY_PAGE_SIZE = 10;
+
 function PredictionHistory({ predictionHistory }) {
+  const [sortMode, setSortMode] = useState('submitted'); // 'submitted' | 'date-asc' | 'date-desc'
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const sortedHistory = useMemo(() => {
+    if (sortMode === 'date-asc') {
+      return [...predictionHistory].sort((a, b) => a.date.localeCompare(b.date));
+    }
+    if (sortMode === 'date-desc') {
+      return [...predictionHistory].sort((a, b) => b.date.localeCompare(a.date));
+    }
+    // Default: latest submitted at the top, first submitted at the bottom.
+    return [...predictionHistory].reverse();
+  }, [predictionHistory, sortMode]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedHistory.length / HISTORY_PAGE_SIZE));
+  const activePage = Math.min(currentPage, totalPages);
+  const pageStart = (activePage - 1) * HISTORY_PAGE_SIZE;
+  const pageItems = sortedHistory.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
+
+  const handleSortToggle = () => {
+    setCurrentPage(1);
+    setSortMode((previous) => (previous === 'date-asc' ? 'date-desc' : 'date-asc'));
+  };
+
+  const handleResetSort = () => {
+    setCurrentPage(1);
+    setSortMode('submitted');
+  };
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
+
+  const sortIndicator =
+    sortMode === 'date-asc' ? '▲' : sortMode === 'date-desc' ? '▼' : '↕';
+
   return (
     <div className="history-card">
       <h2 className="history-title">PREDICTION HISTORY</h2>
@@ -387,48 +427,98 @@ function PredictionHistory({ predictionHistory }) {
           Prediction history will show here.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>KNN Prediction</th>
-                <th>KNN Confidence</th>
-                <th>SVM Prediction</th>
-                <th>SVM Confidence</th>
-                <th>Actual</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {predictionHistory.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.date}</td>
-
-                  <td>
-                    {item.knnPrediction}
-                  </td>
-
-                  <td>
-                    {item.knnConfidence}
-                  </td>
-
-                  <td>
-                    {item.svmPrediction}
-                  </td>
-
-                  <td>
-                    {item.svmConfidence}
-                  </td>
-
-                  <td>
-                    {item.actual || "Pending"}
-                  </td>
+        <>
+          <div className="table-responsive">
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th
+                    className="sortable-header"
+                    onClick={handleSortToggle}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') handleSortToggle();
+                    }}
+                    aria-label={`Sort by date, currently ${
+                      sortMode === 'date-asc'
+                        ? 'ascending'
+                        : sortMode === 'date-desc'
+                        ? 'descending'
+                        : 'latest submitted first'
+                    }`}
+                  >
+                    Date
+                    <span className="sort-indicator" aria-hidden="true">{sortIndicator}</span>
+                  </th>
+                  <th>KNN Prediction</th>
+                  <th>KNN Confidence</th>
+                  <th>SVM Prediction</th>
+                  <th>SVM Confidence</th>
+                  <th>Actual</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {pageItems.map((item) => (
+                  <tr key={item.id ?? `${item.date}-${item.knnConfidence}-${item.svmConfidence}`}>
+                    <td>{item.date}</td>
+
+                    <td>
+                      {item.knnPrediction}
+                    </td>
+
+                    <td>
+                      {item.knnConfidence}
+                    </td>
+
+                    <td>
+                      {item.svmPrediction}
+                    </td>
+
+                    <td>
+                      {item.svmConfidence}
+                    </td>
+
+                    <td>
+                      {item.actual || "Pending"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="history-pagination">
+            <button
+              type="button"
+              className="page-btn"
+              onClick={() => goToPage(activePage - 1)}
+              disabled={activePage === 1}
+            >
+              Previous
+            </button>
+
+            <span className="page-indicator">
+              Page {activePage} of {totalPages}
+            </span>
+
+            <button
+              type="button"
+              className="page-btn"
+              onClick={() => goToPage(activePage + 1)}
+              disabled={activePage === totalPages}
+            >
+              Next
+            </button>
+
+            {sortMode !== 'submitted' && (
+              <button type="button" className="page-btn reset-sort-btn" onClick={handleResetSort}>
+                Reset sort
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
