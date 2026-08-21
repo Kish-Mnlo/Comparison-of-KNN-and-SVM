@@ -36,6 +36,8 @@ def re_update_data():
 
     df = build_features(df)
 
+
+
     last_updated = datetime.now().date()
     
 
@@ -45,7 +47,7 @@ re_update_data()
 @app.route("/search", methods=["POST"])
 def search():
     if last_updated != datetime.now().date():
-        re_update_data
+        re_update_data()
     
     caughtdata = request.get_json()
 
