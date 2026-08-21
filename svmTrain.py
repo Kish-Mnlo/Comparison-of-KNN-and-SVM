@@ -109,7 +109,7 @@ pipeline = Pipeline([
     (
         "svm",
         SVC(
-            kernel="rbf",
+            kernel="linear",
             probability=True,
             class_weight="balanced",
             random_state=42,
@@ -120,8 +120,7 @@ pipeline = Pipeline([
 # Hyperparameter Tuning Grid
 param_grid = {
     "feature_selection__k": [1, 2, 3, 4, 5, 6, 7, 8, 9, "all"],
-    "svm__C":  [0.01, 0.1, 1, 10, 50, 100, 500],
-    "svm__gamma": ['scale', 1, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001]
+    "svm__C":  [0.01, 0.1, 1, 10, 50, 100, 500]
 }
 
 # Time-series split logic for cross-validation
