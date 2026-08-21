@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import reactLogo from './assets/react.svg'
@@ -14,6 +14,8 @@ import Admin from './Admin'
 import PredictionChart from './PredictionChart.jsx'
 import './PredictionChart.css'
 import OpeningScreen from './Openingscreen.jsx'
+import './Loading.css'
+import './History.css'
 
 function OpeningBanner(){
   return (
@@ -24,12 +26,53 @@ function OpeningBanner(){
   )
 }
 
+const DEFAULT_WAIT_MESSAGES = ['Please wait', 'Almost there', 'Just a moment more'];
+
+function LoadingSpinner({ label, messages = DEFAULT_WAIT_MESSAGES, interval = 3000 }) {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const isRotating = label === undefined;
+
+  useEffect(() => {
+    if (!isRotating) return;
+
+    setMessageIndex(0);
+    const timer = setInterval(() => {
+      setMessageIndex((previousIndex) => (previousIndex + 1) % messages.length);
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [isRotating, messages, interval]);
+
+  const displayText = isRotating ? messages[messageIndex] : label;
+
+  return (
+    <div
+      className="loading-state"
+      role="status"
+      aria-live="polite"
+      aria-label={displayText ? undefined : 'Loading'}
+    >
+      {displayText && <span className="loading-text">{displayText}</span>}
+      <span
+        className={`loading-dots${displayText ? '' : ' loading-dots-standalone'}`}
+        aria-hidden="true"
+      >
+        <span className="dot"></span>
+        <span className="dot"></span>
+        <span className="dot"></span>
+      </span>
+    </div>
+  );
+}
+
 function OhlcvData({
   data,
   setData,
   setNextData,
   setPrediction,
-   setPredictionHistory,
+  setPredictionHistory,
+  isLoading,
+  setIsLoading,
 })  {
   const [stock_date, setDate] = useState('');
   const [error, setError] = useState('');
@@ -47,6 +90,7 @@ function OhlcvData({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/search`, {
@@ -74,6 +118,7 @@ function OhlcvData({
       setPredictionHistory((previousHistory) => [
         ...previousHistory,
         {
+          id: `${result.data.Date}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           date: result.data.Date,
           knnPrediction: result.results.KNN.Prediction,
           knnConfidence:
@@ -91,6 +136,8 @@ function OhlcvData({
     } catch (error) {
       setError(error.error)
       setErrorMessage(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -144,7 +191,7 @@ function OhlcvData({
           yearDropdownItemNumber={new Date().getFullYear() - 2016 + 1}
           scrollableYearDropdown
         />
-        <input type="submit" value="Submit" />
+        <input type="submit" value={isLoading ? 'Loading...' : 'Submit'} disabled={isLoading} />
       </div>
     </form>
 
@@ -189,9 +236,11 @@ function OhlcvData({
   );
 }
 
-function PredictionResults({ nextData, prediction }) {
+function PredictionResults({ nextData, prediction, isLoading }) {
 return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</h2>
-  {prediction ? (
+  {isLoading ? (
+    <LoadingSpinner />
+  ) : prediction ? (
     <div className="prediction-comparison">
 
       {/* KNN */}
@@ -295,7 +344,13 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
         </thead>
 
         <tbody>
-          {nextData ? (
+          {isLoading ? (
+            <tr>
+              <td colSpan={6} className="table-loading-cell">
+                <LoadingSpinner label="" />
+              </td>
+            </tr>
+          ) : nextData ? (
             <tr>
               <td>{nextData.Date}</td>
               <td>{Number(nextData.Open).toFixed(2)}</td>
@@ -324,7 +379,45 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 );
 }
 
+const HISTORY_PAGE_SIZE = 10;
+
 function PredictionHistory({ predictionHistory }) {
+  const [sortMode, setSortMode] = useState('submitted'); // 'submitted' | 'date-asc' | 'date-desc'
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const sortedHistory = useMemo(() => {
+    if (sortMode === 'date-asc') {
+      return [...predictionHistory].sort((a, b) => a.date.localeCompare(b.date));
+    }
+    if (sortMode === 'date-desc') {
+      return [...predictionHistory].sort((a, b) => b.date.localeCompare(a.date));
+    }
+    // Default: latest submitted at the top, first submitted at the bottom.
+    return [...predictionHistory].reverse();
+  }, [predictionHistory, sortMode]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedHistory.length / HISTORY_PAGE_SIZE));
+  const activePage = Math.min(currentPage, totalPages);
+  const pageStart = (activePage - 1) * HISTORY_PAGE_SIZE;
+  const pageItems = sortedHistory.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
+
+  const handleSortToggle = () => {
+    setCurrentPage(1);
+    setSortMode((previous) => (previous === 'date-asc' ? 'date-desc' : 'date-asc'));
+  };
+
+  const handleResetSort = () => {
+    setCurrentPage(1);
+    setSortMode('submitted');
+  };
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
+
+  const sortIndicator =
+    sortMode === 'date-asc' ? '▲' : sortMode === 'date-desc' ? '▼' : '↕';
+
   return (
     <div className="history-card">
       <h2 className="history-title">PREDICTION HISTORY</h2>
@@ -334,48 +427,98 @@ function PredictionHistory({ predictionHistory }) {
           Prediction history will show here.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>KNN Prediction</th>
-                <th>KNN Confidence</th>
-                <th>SVM Prediction</th>
-                <th>SVM Confidence</th>
-                <th>Actual</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {predictionHistory.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.date}</td>
-
-                  <td>
-                    {item.knnPrediction}
-                  </td>
-
-                  <td>
-                    {item.knnConfidence}
-                  </td>
-
-                  <td>
-                    {item.svmPrediction}
-                  </td>
-
-                  <td>
-                    {item.svmConfidence}
-                  </td>
-
-                  <td>
-                    {item.actual || "Pending"}
-                  </td>
+        <>
+          <div className="table-responsive">
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th
+                    className="sortable-header"
+                    onClick={handleSortToggle}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') handleSortToggle();
+                    }}
+                    aria-label={`Sort by date, currently ${
+                      sortMode === 'date-asc'
+                        ? 'ascending'
+                        : sortMode === 'date-desc'
+                        ? 'descending'
+                        : 'latest submitted first'
+                    }`}
+                  >
+                    Date
+                    <span className="sort-indicator" aria-hidden="true">{sortIndicator}</span>
+                  </th>
+                  <th>KNN Prediction</th>
+                  <th>KNN Confidence</th>
+                  <th>SVM Prediction</th>
+                  <th>SVM Confidence</th>
+                  <th>Actual</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {pageItems.map((item) => (
+                  <tr key={item.id ?? `${item.date}-${item.knnConfidence}-${item.svmConfidence}`}>
+                    <td>{item.date}</td>
+
+                    <td>
+                      {item.knnPrediction}
+                    </td>
+
+                    <td>
+                      {item.knnConfidence}
+                    </td>
+
+                    <td>
+                      {item.svmPrediction}
+                    </td>
+
+                    <td>
+                      {item.svmConfidence}
+                    </td>
+
+                    <td>
+                      {item.actual || "Pending"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="history-pagination">
+            <button
+              type="button"
+              className="page-btn"
+              onClick={() => goToPage(activePage - 1)}
+              disabled={activePage === 1}
+            >
+              Previous
+            </button>
+
+            <span className="page-indicator">
+              Page {activePage} of {totalPages}
+            </span>
+
+            <button
+              type="button"
+              className="page-btn"
+              onClick={() => goToPage(activePage + 1)}
+              disabled={activePage === totalPages}
+            >
+              Next
+            </button>
+
+            {sortMode !== 'submitted' && (
+              <button type="button" className="page-btn reset-sort-btn" onClick={handleResetSort}>
+                Reset sort
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
@@ -386,6 +529,7 @@ function App() {
   const [nextData, setNextData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [predictionHistory, setPredictionHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('results');
   const [darkMode, setDarkMode] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -420,6 +564,8 @@ function App() {
         setNextData={setNextData}
         setPrediction={setPrediction}
         setPredictionHistory={setPredictionHistory}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
       />
 
       <div className="tab-bar">
@@ -445,6 +591,7 @@ function App() {
             <PredictionResults 
               nextData={nextData}
               prediction={prediction}
+              isLoading={isLoading}
             />
           
           

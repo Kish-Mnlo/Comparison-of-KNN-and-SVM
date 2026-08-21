@@ -1,0 +1,72 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.loading-text {
+  font-size: 16px;
+  opacity: 0.75;
+  color: rgb(200, 253, 187);
+  font-family: Poppins, sans-serif;
+}
+
+.loading-dots {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin-left: 6px;
+  height: 10px;
+}
+
+.loading-dots.loading-dots-standalone {
+  margin-left: 0;
+}
+
+.loading-dots .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgb(43, 216, 43);
+  opacity: 0.3;
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+
+.loading-dots .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dots .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.table-loading-cell {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.table-loading-cell .loading-state {
+  padding: 16px 0;
+}
+
+input[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes dot-pulse {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
