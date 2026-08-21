@@ -4,7 +4,6 @@ import pandas as pd
 import joblib
 from features3 import build_features
 from datetime import datetime
-import yfinance as yf
 import os
 
 app = Flask(__name__)
@@ -19,38 +18,32 @@ KNNmodel = joblib.load("knn.pkl")
 SVMmodel = joblib.load("finalsvm.pkl")
 
 
-def re_update_data():
+def read_csv_data():
     global df, last_updated
     # Download the df till present time once when the app starts
-    ticker = "PSEI.PS"
     try: 
-        df = yf.download(
-            ticker,
-            start="2016-01-01",
-            auto_adjust=True,
-            progress=False
+        df = pd.read_csv(
+            "psei_features.csv",
+            index_col=0,
+            parse_dates=True
         )
         if df.empty:
-            raise ValueError("Yahoo Finance returned no data.")
+            raise ValueError("No data in csv.")
 
-        df.index = pd.to_datetime(df.index).normalize()
-
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
+        df.index = pd.to_datetime(df.index)
 
         df = build_features(df)
         last_updated = datetime.now().date()
     except Exception as e:
-        print(f"Error updating stock data: {e}")
+        print(f"Could not load csv data: {e}")
         raise
 
-re_update_data()
-
+read_csv_data()
 
 @app.route("/search", methods=["POST"])
 def search():
     if last_updated != datetime.now().date():
-        re_update_data()
+        read_csv_data()
     
     caughtdata = request.get_json()
 
@@ -68,7 +61,7 @@ def search():
             "message": "Please select a date from the calendar."
         }), 400
 
-    selected_date = pd.to_datetime(date).normalize()
+    selected_date = pd.to_datetime(date)
 
     # Find the matching row
     if selected_date not in df.index:
