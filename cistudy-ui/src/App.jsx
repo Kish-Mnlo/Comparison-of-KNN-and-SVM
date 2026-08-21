@@ -181,8 +181,8 @@ function OhlcvData({
             setDate(toLocalISODate(date));
           }}
           filterDate={(date) => date.getDay() !== 0 && date.getDay() !== 6}
-          minDate={new Date('2016-02-01')}
-          maxDate={new Date(today)}
+          minDate={new Date('2024-01-04')}
+          maxDate={new Date('2026-07-16')}
           dateFormat="MM/dd/yy"
           placeholderText="MM/DD/YY"
           showMonthDropdown

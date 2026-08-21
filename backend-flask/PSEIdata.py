@@ -15,7 +15,7 @@ CORS(app, origins=[
 
 # Load the model
 KNNmodel = joblib.load("knn.pkl")
-SVMmodel = joblib.load("finalsvm.pkl")
+SVMmodel = joblib.load("svm.pkl")
 
 
 def read_csv_data():
