@@ -40,6 +40,13 @@ def read_csv_data():
 
 read_csv_data()
 
+@app.route("/")
+def home():
+    return jsonify({
+        "status": "ok",
+        "message": "KNN/SVM Stock Prediction API is running."
+    })
+
 @app.route("/search", methods=["POST"])
 def search():
     if last_updated != datetime.now().date():
