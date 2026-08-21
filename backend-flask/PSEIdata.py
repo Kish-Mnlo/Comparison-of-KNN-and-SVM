@@ -5,6 +5,7 @@ import joblib
 from features3 import build_features
 from datetime import datetime
 import yfinance as yf
+import os
 
 app = Flask(__name__)
 CORS(app, origins=[
@@ -19,27 +20,29 @@ SVMmodel = joblib.load("finalsvm.pkl")
 
 
 def re_update_data():
-    global df, last_updated, date
+    global df, last_updated
     # Download the df till present time once when the app starts
     ticker = "PSEI.PS"
-    df = yf.download(
-        ticker,
-        start="2016-01-01",
-        auto_adjust=True,
-        progress=False
-    )
+    try: 
+        df = yf.download(
+            ticker,
+            start="2016-01-01",
+            auto_adjust=True,
+            progress=False
+        )
+        if df.empty:
+            raise ValueError("Yahoo Finance returned no data.")
 
-    df.index = pd.to_datetime(df.index)
+        df.index = pd.to_datetime(df.index).normalize()
 
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
 
-    df = build_features(df)
-
-
-
-    last_updated = datetime.now().date()
-    
+        df = build_features(df)
+        last_updated = datetime.now().date()
+    except Exception as e:
+        print(f"Error updating stock data: {e}")
+        raise
 
 re_update_data()
 
@@ -65,7 +68,7 @@ def search():
             "message": "Please select a date from the calendar."
         }), 400
 
-    selected_date = pd.to_datetime(date)
+    selected_date = pd.to_datetime(date).normalize()
 
     # Find the matching row
     if selected_date not in df.index:
@@ -167,4 +170,5 @@ def search():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="5000")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
