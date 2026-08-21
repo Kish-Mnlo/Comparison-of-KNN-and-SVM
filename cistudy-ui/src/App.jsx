@@ -89,8 +89,8 @@ function OhlcvData({
         }
       ]);
     } catch (error) {
-      setError("Unable to connect to the server.")
-      setErrorMessage("Please try again.");
+      setError(error.error)
+      setErrorMessage(error.message);
     }
   };
 
