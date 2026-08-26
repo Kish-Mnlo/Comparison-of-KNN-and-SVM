@@ -29,10 +29,7 @@ def read_csv_data():
         )
         if df.empty:
             raise ValueError("No data in csv.")
-
         df.index = pd.to_datetime(df.index)
-
-        df = build_features(df)
         last_updated = datetime.now().date()
     except Exception as e:
         print(f"Could not load csv data: {e}")
@@ -49,8 +46,6 @@ def home():
 
 @app.route("/search", methods=["POST"])
 def search():
-    if last_updated != datetime.now().date():
-        read_csv_data()
     
     caughtdata = request.get_json()
 
