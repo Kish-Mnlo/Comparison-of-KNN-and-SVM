@@ -44,8 +44,6 @@ df["Future_Return"] = (
 
 
 # Classification Target
-# 1 = Next-day return > 0.2%
-# 0 = Next-day return <= 0.2%
 df["Target"] = np.where(df["Close"].shift(-1) > df["Close"], 1, -1)
 
 # Daily return
