@@ -1,16 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import stockDown from './assets/stock_down.png'
 import stockUp from './assets/stock_up.png'
 import sun from './assets/sun.png'
 import moon from'./assets/moon.png'
 import './App.css'
 import './OpeningBanner.css'
-import Admin from './Admin'
 import PredictionChart from './PredictionChart.jsx'
 import './PredictionChart.css'
 import OpeningScreen from './Openingscreen.jsx'
@@ -70,7 +66,9 @@ function OhlcvData({
   setData,
   setNextData,
   setPrediction,
+  predictionHistory,
   setPredictionHistory,
+  setActualDirection,
   isLoading,
   setIsLoading,
 })  {
@@ -90,6 +88,18 @@ function OhlcvData({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+
+    // Prevent submitting a date that's already been predicted.
+    const isDuplicateDate = predictionHistory.some(
+      (item) => item.date === stock_date
+    );
+
+    if (isDuplicateDate) {
+      setError('Duplicate Date');
+      setErrorMessage('You already submitted a prediction for this date. Please choose a different date.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -114,6 +124,7 @@ function OhlcvData({
       setData(result.data);
       setNextData(result.next_data);
       setPrediction(result.results);
+      setActualDirection(result.actual ?? null);
 
       setPredictionHistory((previousHistory) => [
         ...previousHistory,
@@ -121,15 +132,7 @@ function OhlcvData({
           id: `${result.data.Date}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           date: result.data.Date,
           knnPrediction: result.results.KNN.Prediction,
-          knnConfidence:
-            result.results.KNN.Prediction === "Higher"
-              ? result.results.KNN.Probability_Higher
-              : result.results.KNN.Probability_Lower,
           svmPrediction: result.results.SVM.Prediction,
-          svmConfidence:
-            result.results.SVM.Prediction === "Higher"
-              ? result.results.SVM.Probability_Higher
-              : result.results.SVM.Probability_Lower,
           actual: result.actual
         }
       ]);
@@ -227,7 +230,7 @@ function OhlcvData({
                   <td>0</td>
                 </tr>
               )}
-              
+
             </tbody>
           </table>
         </div>
@@ -236,7 +239,12 @@ function OhlcvData({
   );
 }
 
-function PredictionResults({ nextData, prediction, isLoading }) {
+function PredictionResults({ nextData, prediction, isLoading, actualDirection }) {
+  // Which model(s), if any, predicted the direction that actually happened.
+  const matchingModels = actualDirection
+    ? ['KNN', 'SVM'].filter((model) => prediction?.[model]?.Prediction === actualDirection)
+    : [];
+
 return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</h2>
   {isLoading ? (
     <LoadingSpinner />
@@ -269,15 +277,13 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
             : "sell"}.
         </div>
 
-        <p>
-          Probability Higher:{" "}
-          {prediction.KNN?.Probability_Higher}
-        </p>
-
-        <p>
-          Probability Lower:{" "}
-          {prediction.KNN?.Probability_Lower}
-        </p>
+        {actualDirection && (
+          <p style={{ fontWeight: 'bold', color: prediction.KNN?.Prediction === actualDirection ? 'green' : 'red' }}>
+            {prediction.KNN?.Prediction === actualDirection
+              ? 'Matched the actual next-day direction'
+              : 'Did not match the actual next-day direction'}
+          </p>
+        )}
       </div>
 
 
@@ -307,15 +313,13 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
             : "sell"}.
         </div>
 
-        <p>
-          Probability Higher:{" "}
-          {prediction.SVM?.Probability_Higher}
-        </p>
-
-        <p>
-          Probability Lower:{" "}
-          {prediction.SVM?.Probability_Lower}
-        </p>
+        {actualDirection && (
+          <p style={{ fontWeight: 'bold', color: prediction.SVM?.Prediction === actualDirection ? 'green' : 'red' }}>
+            {prediction.SVM?.Prediction === actualDirection
+              ? 'Matched the actual next-day direction'
+              : 'Did not match the actual next-day direction'}
+          </p>
+        )}
       </div>
 
     </div>
@@ -372,6 +376,17 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
         </tbody>
       </table>
     </div>
+
+    {!isLoading && actualDirection && (
+      <div style={{ marginTop: '10px', fontWeight: 'bold', color: 'white' }}>
+        {matchingModels.length === 0 &&
+          'No algorithm matched the actual next-day direction.'}
+        {matchingModels.length === 1 &&
+          `${matchingModels[0]} matched the actual next-day direction.`}
+        {matchingModels.length === 2 &&
+          'Both KNN and SVM matched the actual next-day direction.'}
+      </div>
+    )}
   </div>
 
 </div>
@@ -418,9 +433,37 @@ function PredictionHistory({ predictionHistory }) {
   const sortIndicator =
     sortMode === 'date-asc' ? '▲' : sortMode === 'date-desc' ? '▼' : '↕';
 
+  // Which algorithm(s), if any, matched the actual next-day direction for a given row.
+  const getMatchLabel = (item) => {
+    if (!item.actual) return 'Pending';
+
+    const knnMatch = item.knnPrediction === item.actual;
+    const svmMatch = item.svmPrediction === item.actual;
+
+    if (knnMatch && svmMatch) return 'Both';
+    if (knnMatch) return 'KNN';
+    if (svmMatch) return 'SVM';
+    return 'None';
+  };
+
+  // Per-model correct-prediction counts out of the number of dates selected so far.
+  const totalDatesSelected = predictionHistory.length;
+  const knnCorrectCount = predictionHistory.filter(
+    (item) => item.actual && item.knnPrediction === item.actual
+  ).length;
+  const svmCorrectCount = predictionHistory.filter(
+    (item) => item.actual && item.svmPrediction === item.actual
+  ).length;
+
   return (
     <div className="history-card">
       <h2 className="history-title">PREDICTION HISTORY</h2>
+
+      <div className="history-score">
+        KNN: {knnCorrectCount} / {totalDatesSelected} matched 
+        <br />
+        SVM: {svmCorrectCount} / {totalDatesSelected} matched
+      </div>
 
       {predictionHistory.length === 0 ? (
         <div className="pr-warning">
@@ -452,16 +495,15 @@ function PredictionHistory({ predictionHistory }) {
                     <span className="sort-indicator" aria-hidden="true">{sortIndicator}</span>
                   </th>
                   <th>KNN Prediction</th>
-                  <th>KNN Confidence</th>
                   <th>SVM Prediction</th>
-                  <th>SVM Confidence</th>
-                  <th>Actual</th>
+                  <th>Next-Day Actual Direction</th>
+                  <th>Which Algorithm Matches</th>
                 </tr>
               </thead>
 
               <tbody>
                 {pageItems.map((item) => (
-                  <tr key={item.id ?? `${item.date}-${item.knnConfidence}-${item.svmConfidence}`}>
+                  <tr key={item.id ?? `${item.date}-${item.knnPrediction}-${item.svmPrediction}`}>
                     <td>{item.date}</td>
 
                     <td>
@@ -469,19 +511,15 @@ function PredictionHistory({ predictionHistory }) {
                     </td>
 
                     <td>
-                      {item.knnConfidence}
-                    </td>
-
-                    <td>
                       {item.svmPrediction}
                     </td>
 
                     <td>
-                      {item.svmConfidence}
+                      {item.actual || "Pending"}
                     </td>
 
                     <td>
-                      {item.actual || "Pending"}
+                      {getMatchLabel(item)}
                     </td>
                   </tr>
                 ))}
@@ -529,6 +567,7 @@ function App() {
   const [nextData, setNextData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [predictionHistory, setPredictionHistory] = useState([]);
+  const [actualDirection, setActualDirection] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('results');
   const [darkMode, setDarkMode] = useState(false);
@@ -558,12 +597,14 @@ function App() {
       </div>
 
       <OpeningBanner />
-      <OhlcvData 
+      <OhlcvData
         data = {data}
         setData={setData}
         setNextData={setNextData}
         setPrediction={setPrediction}
+        predictionHistory={predictionHistory}
         setPredictionHistory={setPredictionHistory}
+        setActualDirection={setActualDirection}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
       />
@@ -587,14 +628,15 @@ function App() {
 
       {activeTab === 'results' && (
         <>
-          
-            <PredictionResults 
+
+            <PredictionResults
               nextData={nextData}
               prediction={prediction}
               isLoading={isLoading}
+              actualDirection={actualDirection}
             />
-          
-          
+
+
         </>
       )}
 
@@ -607,6 +649,5 @@ function App() {
     </>
   )
 
-    //return(<Admin />)
 }
 export default App

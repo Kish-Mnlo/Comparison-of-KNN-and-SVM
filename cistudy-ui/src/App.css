@@ -343,6 +343,13 @@ body{
   padding: 0 20px;
 }
 
+.history-score {
+  color: rgb(208, 241, 192);
+  background-color: #061a06;
+  padding: 5px;
+  border-radius: 5px;
+}
+
 .history-title{
   color: #d0f3d0;
   font-size: 26px;
