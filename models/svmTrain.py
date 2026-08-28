@@ -27,19 +27,9 @@ import joblib
 
 from features3 import build_features
 
-# Download PSEI Data
-ticker = "PSEI.PS"
-
-df = yf.download(
-    ticker,
-    start="2016-01-01",
-    end="2025-12-31",
-    auto_adjust=True,
-    progress=False
-)
-
-if isinstance(df.columns, pd.MultiIndex):
-    df.columns = df.columns.get_level_values(0)
+df = pd.read_csv("psei_real_sorted.csv")
+print(df.columns.tolist())
+print(df.head())
 
 
 # Build Features
@@ -56,14 +46,12 @@ df["Future_Return"] = (
 # Classification Target
 # 1 = Next-day return > 0.2%
 # 0 = Next-day return <= 0.2%
-df["Target"] = (
-    df["Future_Return"] > 0.002
-).astype(int)
+df["Target"] = np.where(df["Close"].shift(-1) > df["Close"], 1, -1)
 
 # Daily return
 df["Daily_Return"] = df["Close"].pct_change()
 
-# Remove NaN values
+# Remove missing values
 df = df.dropna()
 
 # Feature Matrix
@@ -167,9 +155,6 @@ print(f"Precision: {precision_score(y_val, y_pred):.4f}")
 print(f"Recall   : {recall_score(y_val, y_pred):.4f}")
 print(f"F1 Score : {f1_score(y_val, y_pred):.4f}")
 
-# Training balanced accuracy
-train_balanced_accuracy = balanced_accuracy_score(y_val, y_pred)
-print(f"Validation Balanced Accuracy: {train_balanced_accuracy:.4f}")
 
 print("\nValidation Classification Report:")
 print(classification_report(y_val, y_pred))

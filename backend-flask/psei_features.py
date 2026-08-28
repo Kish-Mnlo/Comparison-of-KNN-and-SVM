@@ -29,6 +29,8 @@ print(df.head())
 # Build Features
 df = build_features(df)
 
+df.to_csv("web_data_withFeatures.csv", index=False)
+
 # Target Variable
 # Calculate next-day return
 df["Future_Return"] = (
@@ -150,4 +152,4 @@ print(f"F1 Score : {f1_score(y_val, y_val_pred):.4f}\n")
 print("\nValidation Classification Report:")
 print(classification_report(y_val, y_val_pred))
 
-joblib.dump(best_model, "knn.pkl")
+

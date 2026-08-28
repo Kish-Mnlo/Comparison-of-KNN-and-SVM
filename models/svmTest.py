@@ -20,20 +20,9 @@ from features3 import build_features
 SVMmodel = joblib.load("svm.pkl")
 
 
-# Download PSEI Data
-ticker = "PSEI.PS"
-
-df = yf.download(
-    ticker,
-    start="2016-01-01",
-    end="2025-12-31",
-    auto_adjust=True,
-    progress=False
-)
-
-if isinstance(df.columns, pd.MultiIndex):
-    df.columns = df.columns.get_level_values(0)
-
+df = pd.read_csv("psei_real_sorted.csv")
+print(df.columns.tolist())
+print(df.head())
 
 # Build Features
 df = build_features(df)
@@ -45,16 +34,12 @@ df["Future_Return"] = (
 ) / df["Close"]
 
 # Classification Target
-# 1 = Next-day return > 0.2%
-# 0 = Next-day return <= 0.2%
-df["Target"] = (
-    df["Future_Return"] > 0
-).astype(int)
+df["Target"] = np.where(df["Close"].shift(-1) > df["Close"], 1, -1)
 
 # Daily return
 df["Daily_Return"] = df["Close"].pct_change()
 
-# Remove NaN values
+# Remove missing values
 df = df.dropna()
 
 # Feature Matrix
@@ -116,7 +101,7 @@ print(confumatrix)
 # SVM
 ConfusionMatrixDisplay(
     confusion_matrix=confumatrix,
-    display_labels=["≤ 0.2%", "> 0.2%"]
+    display_labels=["-1", "1"]
 ).plot(
     cmap="Blues",
     colorbar=False
@@ -141,5 +126,5 @@ results = pd.DataFrame(
     index=y_test.index,
 )
 
-print("\nLast 50 Predictions")
-print(results.tail(50))
+print("\nLast 20 Predictions")
+print(results.tail(20))
