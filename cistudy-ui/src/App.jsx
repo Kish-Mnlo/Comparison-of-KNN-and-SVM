@@ -22,12 +22,15 @@ function OpeningBanner(){
   )
 }
 
+// Loading messages
 const DEFAULT_WAIT_MESSAGES = ['Please wait', 'Almost there', 'Just a moment more'];
 
+// Loading function
 function LoadingSpinner({ label, messages = DEFAULT_WAIT_MESSAGES, interval = 3000 }) {
   const [messageIndex, setMessageIndex] = useState(0);
   const isRotating = label === undefined;
 
+  // Continues to rotate until data is shown
   useEffect(() => {
     if (!isRotating) return;
 
@@ -61,6 +64,8 @@ function LoadingSpinner({ label, messages = DEFAULT_WAIT_MESSAGES, interval = 30
   );
 }
 
+// Handles the collection of the date and also displays the data for the date selected
+// Communicates with the backend for the information gathered
 function OhlcvData({
   data,
   setData,
@@ -75,9 +80,11 @@ function OhlcvData({
   const [stock_date, setDate] = useState('');
   const [error, setError] = useState('');
   const [error_message, setErrorMessage] = useState('');
+  // Gathers the backend API url from the .env
   const API_URL = import.meta.env.VITE_API_URL;
   const today = new Date().toISOString().split('T')[0];
 
+  // Reformats the date to YYYY/MM/DD
   const toLocalISODate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -85,11 +92,12 @@ function OhlcvData({
     return `${year}-${month}-${day}`;
   };
 
+  // Handles the submit process of the form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    // Prevent submitting a date that's already been predicted.
+    // Prevents submitting a date that's already been predicted
     const isDuplicateDate = predictionHistory.some(
       (item) => item.date === stock_date
     );
@@ -100,19 +108,23 @@ function OhlcvData({
       return;
     }
 
+    // Will start loading while data is fetching
     setIsLoading(true);
-
+    
     try {
+      //fetches the /search function in backend
       const response = await fetch(`${API_URL}/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        // returns the stock_date gathered from the POST in the form
         body: JSON.stringify({
           stock_date
         }),
       });
 
+      //If the response fails, error is sent
       if (!response.ok) {
         const err = await response.json();
         setError(err.error || "Something went wrong.") ;
@@ -120,12 +132,14 @@ function OhlcvData({
         return
       }
 
+      // Sets the dictionaries gathered from the backend into these variables
       const result = await response.json();
       setData(result.data);
       setNextData(result.next_data);
       setPrediction(result.results);
       setActualDirection(result.actual ?? null);
 
+      // Handles prediction history and lists all dates that have been predicted
       setPredictionHistory((previousHistory) => [
         ...previousHistory,
         {
@@ -140,13 +154,16 @@ function OhlcvData({
       setError(error.error)
       setErrorMessage(error.message);
     } finally {
+      // Sets loading to false once finished
       setIsLoading(false);
     }
   };
 
+  //Returns the Form container along with the selected date and its corresponding
   return (
     <div className="ohlcv-container">
     <div className="data-box">
+    {/* Displays error message if existing */}
     {error_message && (
           <div className="error-alert">
             <span className="error-icon">⚠️</span>
@@ -164,6 +181,7 @@ function OhlcvData({
             </button>
           </div>
         )}
+    {/* Form for the selection of the date */}
     <form onSubmit={handleSubmit} className="box-header">
       <div className="box-title">OHLCV DATA</div>
       <div className="form-controls">
@@ -176,6 +194,7 @@ function OhlcvData({
 
             const day = date.getDay();
 
+            // Cannot select weekends
             // 0 = Sunday, 6 = Saturday
             if (day === 0 || day === 6) {
               return;
@@ -184,8 +203,9 @@ function OhlcvData({
             setDate(toLocalISODate(date));
           }}
           filterDate={(date) => date.getDay() !== 0 && date.getDay() !== 6}
+          // Selected dates include test set + past 2025
           minDate={new Date('2024-01-04')}
-          maxDate={new Date('2026-07-16')}
+          maxDate={new Date('2026-08-28')}
           dateFormat="MM/dd/yy"
           placeholderText="MM/DD/YY"
           showMonthDropdown
@@ -197,7 +217,7 @@ function OhlcvData({
         <input type="submit" value={isLoading ? 'Loading...' : 'Submit'} disabled={isLoading} />
       </div>
     </form>
-
+          {/* Table carries the data of the selected date*/}
         <div className="table-responsive">
           <table className="ohlcv-table">
             <thead>
@@ -239,12 +259,14 @@ function OhlcvData({
   );
 }
 
+// Handles the Prediction results of the selected date
 function PredictionResults({ nextData, prediction, isLoading, actualDirection }) {
   // Which model(s), if any, predicted the direction that actually happened.
   const matchingModels = actualDirection
     ? ['KNN', 'SVM'].filter((model) => prediction?.[model]?.Prediction === actualDirection)
     : [];
 
+  // returns the prediction results
 return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</h2>
   {isLoading ? (
     <LoadingSpinner />
@@ -324,16 +346,16 @@ return ( <div className="pr-card"> <h2 className="pr-title">PREDICTION RESULTS</
 
     </div>
   ) : (
+    // This displays if there is no data to display yet.
     <div className="pr-warning">
       Prediction results will show here.
     </div>
   )}
 
 
-  {/* NEXT TRADING DAY */}
+  {/* Table carries the data of the NEXT TRADING DAY */}
   <div>
     <h2 className="pr-nextTradingDay">ACTUAL NEXT TRADING DAY</h2>
-
     <div className="pr-table-container">
       <table className="pr-table">
         <thead>
@@ -562,7 +584,9 @@ function PredictionHistory({ predictionHistory }) {
   );
 }
 
+// Main App function to be thrown
 function App() {
+  // All variables containing the dictionary returned by the backend
   const [data, setData] = useState(null);
   const [nextData, setNextData] = useState(null);
   const [prediction, setPrediction] = useState(null);
@@ -572,7 +596,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('results');
   const [darkMode, setDarkMode] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-
+  
   useEffect(() => {
     document.body.classList.toggle('dark-mode', darkMode);
   }, [darkMode]);
