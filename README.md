@@ -1,7 +1,7 @@
 To run the dockerfile:
 
 1. ```
-   docker build -t psei-backend
+   docker build -t psei-backend . 
    docker run -p 5000:5000 psei-backend
    ```
 2. Then go to http://localhost:5000/
