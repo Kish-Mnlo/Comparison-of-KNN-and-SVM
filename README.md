@@ -1,4 +1,4 @@
-To run the dockerfile:
+To run the dockerfile for backend:
 
 1. ```
    docker build -t psei-backend . 
@@ -20,7 +20,7 @@ NPM, React/Vite, and VSCode
    npm run dev
    ```
 
-To run the backend:
+To run the backend without docker:
 Please have these installed:
 Python, VSCode
 
